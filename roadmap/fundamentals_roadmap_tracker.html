@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fundamentals-First — 24 Month Roadmap Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<style>
+:root{
+  --bg:#f7f5f0;
+  --panel:#ffffff;
+  --panel-2:#f0ede4;
+  --line:#dbd6c9;
+  --text:#1e2128;
+  --muted:#666c7a;
+  --muted-2:#8d93a0;
+  --amber:#a8620a;
+  --amber-dim:#f5e3c4;
+  --green:#1f8f5c;
+  --green-dim:#dcf2e6;
+  --blue:#2f5fc4;
+  --blue-dim:#e2eaf9;
+  --red:#c23b4a;
+  --md-text:#33384a;
+  --mono:'IBM Plex Mono', ui-monospace, monospace;
+  --sans:'IBM Plex Sans', system-ui, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:14px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--amber-dim);color:var(--text);}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
+::-webkit-scrollbar-thumb:hover{background:var(--muted-2);}
+
+a{color:var(--blue);}
+code{font-family:var(--mono);background:var(--panel-2);padding:1px 5px;border-radius:3px;font-size:.9em;color:var(--amber);}
+pre{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:12px 14px;overflow-x:auto;}
+pre code{background:none;padding:0;color:var(--text);}
+
+/* ---------- Boot header ---------- */
+.boot{
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,#ffffff,#f7f5f0);
+  padding:18px 24px 16px;
+}
+.boot-top{
+  display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px 24px;
+}
+.boot-title{
+  font-family:var(--mono);
+  font-size:13px;
+  letter-spacing:.14em;
+  color:var(--muted);
+  text-transform:uppercase;
+}
+.boot-title b{color:var(--amber);font-weight:600;}
+.boot-sub{
+  font-family:var(--mono);font-size:11px;color:var(--muted-2);letter-spacing:.05em;
+}
+.boot-stats{
+  display:flex;gap:22px;flex-wrap:wrap;margin-top:14px;
+}
+.stat{
+  font-family:var(--mono);
+}
+.stat .n{font-size:22px;font-weight:600;color:var(--text);line-height:1;}
+.stat .l{font-size:10px;color:var(--muted-2);letter-spacing:.1em;text-transform:uppercase;margin-top:4px;}
+.stat.accent .n{color:var(--amber);}
+.stat.ok .n{color:var(--green);}
+.stat.active .n{color:var(--blue);}
+
+.progress-outer{
+  margin-top:14px;height:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;overflow:hidden;
+}
+.progress-inner{
+  height:100%;
+  background:linear-gradient(90deg,var(--amber),var(--green));
+  width:0%;
+  transition:width .4s ease;
+}
+
+/* ---------- Layout ---------- */
+.app{
+  display:grid;
+  grid-template-columns:320px 1fr;
+  min-height:calc(100vh - 118px);
+}
+@media (max-width:880px){
+  .app{grid-template-columns:1fr;}
+  .sidebar{position:relative;max-height:none;order:2;border-right:none;border-top:1px solid var(--line);}
+  .main{order:1;}
+}
+
+.sidebar{
+  border-right:1px solid var(--line);
+  background:var(--panel);
+  max-height:calc(100vh - 118px);
+  overflow-y:auto;
+  position:sticky;top:0;
+}
+.sidebar-controls{
+  padding:12px 14px;border-bottom:1px solid var(--line);
+  position:sticky;top:0;background:var(--panel);z-index:5;
+}
+.search-input{
+  width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+  padding:8px 10px;border-radius:6px;font-family:var(--sans);font-size:13px;
+}
+.search-input:focus{outline:none;border-color:var(--amber);}
+.view-tabs{display:flex;gap:6px;margin-top:10px;}
+.view-tab{
+  flex:1;background:var(--panel-2);border:1px solid var(--line);color:var(--muted);
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+  padding:6px 4px;border-radius:5px;cursor:pointer;text-align:center;
+}
+.view-tab.active{background:var(--amber);color:#fff;border-color:var(--amber);}
+
+.tree{padding:6px 0 24px;}
+.phase-block{border-bottom:1px solid var(--line);}
+.phase-head{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;user-select:none;
+}
+.phase-head:hover{background:var(--panel-2);}
+.phase-head .chev{color:var(--muted-2);font-size:10px;transition:transform .15s;width:10px;}
+.phase-head.open .chev{transform:rotate(90deg);}
+.phase-roman{
+  font-family:var(--mono);color:var(--amber);font-weight:700;font-size:12px;
+  width:22px;text-align:center;
+}
+.phase-info{flex:1;min-width:0;}
+.phase-name{font-size:12px;color:var(--text);font-weight:600;}
+.phase-theme{font-size:10.5px;color:var(--muted-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.phase-pct{font-family:var(--mono);font-size:10.5px;color:var(--muted);}
+
+.month-list{display:none;}
+.month-list.open{display:block;}
+.month-block{border-top:1px solid var(--line);}
+.month-head{
+  display:flex;align-items:center;gap:8px;padding:8px 14px 8px 30px;cursor:pointer;user-select:none;
+}
+.month-head:hover{background:var(--panel-2);}
+.month-head .chev{color:var(--muted-2);font-size:9px;transition:transform .15s;width:9px;}
+.month-head.open .chev{transform:rotate(90deg);}
+.month-num{font-family:var(--mono);font-size:11px;color:var(--blue);width:20px;}
+.month-info{flex:1;min-width:0;}
+.month-theme{font-size:11.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.month-dot-row{display:flex;gap:2px;margin-top:3px;}
+.mini-dot{width:6px;height:6px;border-radius:1px;background:var(--line);}
+.mini-dot.done{background:var(--green);}
+.mini-dot.progress{background:var(--blue);}
+
+.week-list{display:none;}
+.week-list.open{display:block;}
+.week-item{
+  display:flex;align-items:center;gap:9px;padding:7px 14px 7px 46px;cursor:pointer;
+  border-left:2px solid transparent;
+}
+.week-item:hover{background:var(--panel-2);}
+.week-item.selected{background:var(--panel-2);border-left-color:var(--amber);}
+.week-status-dot{
+  width:9px;height:9px;border-radius:50%;flex:0 0 9px;border:1.5px solid var(--muted-2);background:transparent;
+}
+.week-status-dot.progress{background:var(--blue);border-color:var(--blue);}
+.week-status-dot.done{background:var(--green);border-color:var(--green);}
+.week-item-text{flex:1;min-width:0;}
+.week-item-num{font-family:var(--mono);font-size:10.5px;color:var(--muted-2);}
+.week-item-title{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.week-item.hidden{display:none;}
+
+/* ---------- Main ---------- */
+.main{padding:26px 34px 60px;max-width:960px;}
+@media (max-width:600px){.main{padding:18px 16px 48px;}}
+
+.dash h1{font-size:20px;margin:0 0 4px;}
+.dash .lede{color:var(--muted);margin:0 0 26px;max-width:640px;}
+
+.memmap-title{
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--muted-2);text-transform:uppercase;
+  margin:0 0 10px;display:flex;align-items:center;gap:10px;
+}
+.legend{display:flex;gap:14px;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-left:auto;}
+.legend span{display:inline-flex;align-items:center;gap:5px;}
+.legend i{width:8px;height:8px;border-radius:2px;display:inline-block;}
+.legend i.empty{background:var(--panel-2);border:1px solid var(--line);}
+.legend i.prog{background:var(--blue);}
+.legend i.done{background:var(--green);}
+
+.memmap{
+  display:grid;
+  grid-template-columns:repeat(13,1fr);
+  gap:5px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:14px;
+  margin-bottom:30px;
+}
+@media (max-width:600px){.memmap{grid-template-columns:repeat(8,1fr);}}
+.mem-cell{
+  aspect-ratio:1;
+  border-radius:4px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:9.5px;color:var(--muted-2);
+  cursor:pointer;position:relative;
+  transition:transform .1s;
+}
+.mem-cell:hover{transform:scale(1.12);z-index:2;border-color:var(--amber);}
+.mem-cell.progress{background:var(--blue-dim);border-color:var(--blue);color:var(--blue);}
+.mem-cell.done{background:var(--green-dim);border-color:var(--green);color:var(--green);}
+
+.phase-cards{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:30px;
+}
+.pcard{
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;
+}
+.pcard-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+.pcard-roman{font-family:var(--mono);color:var(--amber);font-weight:700;font-size:13px;}
+.pcard-pct{font-family:var(--mono);font-size:12px;color:var(--muted);}
+.pcard-theme{font-size:12px;color:var(--text);margin-bottom:10px;min-height:32px;}
+.pcard-bar{height:5px;background:var(--panel-2);border-radius:3px;overflow:hidden;}
+.pcard-bar-inner{height:100%;background:var(--green);}
+.pcard-months{font-family:var(--mono);font-size:10px;color:var(--muted-2);margin-top:8px;}
+
+.section-label{
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--muted-2);text-transform:uppercase;
+  margin:0 0 12px;
+}
+
+.notes-panel{
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin-bottom:26px;
+}
+.notes-panel textarea{
+  width:100%;min-height:90px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;
+  color:var(--text);font-family:var(--sans);font-size:13px;padding:10px;resize:vertical;
+}
+.data-buttons{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+.btn{
+  font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;
+  background:var(--panel-2);border:1px solid var(--line);color:var(--muted);
+  padding:8px 14px;border-radius:6px;cursor:pointer;
+}
+.btn:hover{border-color:var(--amber);color:var(--text);}
+.btn.primary{background:var(--amber);color:#fff;border-color:var(--amber);}
+.btn.danger:hover{border-color:var(--red);color:var(--red);}
+#import-file{display:none;}
+
+/* ---------- Week detail ---------- */
+.week-detail{}
+.wd-eyebrow{
+  font-family:var(--mono);font-size:11px;color:var(--muted-2);letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:6px;
+}
+.wd-eyebrow b{color:var(--amber);}
+.wd-title{font-size:22px;margin:0 0 14px;}
+.wd-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+.badge{
+  font-family:var(--mono);font-size:10.5px;padding:4px 10px;border-radius:20px;border:1px solid var(--line);
+  color:var(--muted);letter-spacing:.03em;
+}
+.badge.fund{color:var(--amber);border-color:var(--amber-dim);}
+.badge.deliv{color:var(--blue);border-color:var(--blue-dim);}
+
+.tracker-box{
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px 18px;margin-bottom:22px;
+}
+.tracker-row{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-end;}
+.tracker-field label{
+  display:block;font-family:var(--mono);font-size:10px;color:var(--muted-2);letter-spacing:.08em;
+  text-transform:uppercase;margin-bottom:7px;
+}
+.status-btns{display:flex;gap:6px;}
+.status-btn{
+  font-family:var(--mono);font-size:11px;padding:7px 12px;border-radius:6px;border:1px solid var(--line);
+  background:var(--panel-2);color:var(--muted);cursor:pointer;
+}
+.status-btn[data-s="not_started"].active{border-color:var(--muted-2);color:var(--text);}
+.status-btn[data-s="in_progress"].active{border-color:var(--blue);color:var(--blue);background:var(--blue-dim);}
+.status-btn[data-s="done"].active{border-color:var(--green);color:var(--green);background:var(--green-dim);}
+
+.score-field input[type=number]{
+  width:70px;background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+  padding:7px 9px;border-radius:6px;font-family:var(--mono);font-size:13px;
+}
+.score-tag{font-family:var(--mono);font-size:10.5px;margin-left:8px;padding:3px 8px;border-radius:10px;}
+.score-tag.pass{background:var(--blue-dim);color:var(--blue);}
+.score-tag.strong{background:var(--amber-dim);color:var(--amber);}
+.score-tag.mastery{background:var(--green-dim);color:var(--green);}
+.score-tag.none{display:none;}
+
+.wd-nav{display:flex;justify-content:space-between;margin-top:32px;padding-top:18px;border-top:1px solid var(--line);}
+.nav-btn{
+  font-family:var(--mono);font-size:11.5px;color:var(--muted);background:none;border:1px solid var(--line);
+  padding:9px 16px;border-radius:6px;cursor:pointer;max-width:44%;text-align:left;
+}
+.nav-btn:hover{border-color:var(--amber);color:var(--text);}
+.nav-btn.next{text-align:right;}
+.nav-btn .lbl{display:block;font-size:9.5px;color:var(--muted-2);margin-bottom:2px;}
+.nav-btn:disabled{opacity:.25;cursor:default;}
+
+/* markdown body rendering */
+.md-body h1,.md-body h2,.md-body h3{font-family:var(--sans);color:var(--text);}
+.md-body h2{font-size:14px;margin:22px 0 8px;color:var(--amber);text-transform:uppercase;letter-spacing:.05em;font-family:var(--mono);border-bottom:1px solid var(--line);padding-bottom:6px;}
+.md-body h3{font-size:13.5px;margin:16px 0 6px;}
+.md-body p{margin:0 0 10px;color:var(--md-text);}
+.md-body ul,.md-body ol{margin:0 0 12px;padding-left:20px;color:var(--md-text);}
+.md-body li{margin-bottom:4px;}
+.md-body table{border-collapse:collapse;width:100%;margin:0 0 14px;font-size:12.5px;}
+.md-body th,.md-body td{border:1px solid var(--line);padding:6px 10px;text-align:left;}
+.md-body th{background:var(--panel-2);font-family:var(--mono);font-size:11px;color:var(--muted);}
+.md-body hr{border:none;border-top:1px solid var(--line);margin:18px 0;}
+.md-body strong{color:var(--text);}
+
+.footer-credit{
+  margin-top:50px;padding-top:16px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:10.5px;color:var(--muted-2);
+}
+</style>
+</head>
+<body>
+
+<div class="boot">
+  <div class="boot-top">
+    <div>
+      <div class="boot-title">FUNDAMENTALS-FIRST <b>//</b> 24-MONTH ENGINEERING ROADMAP TRACKER</div>
+      <div class="boot-sub">Assembly → C → Java → JavaScript → Python → Go → Rust · 104 weeks · 8 phases</div>
+    </div>
+  </div>
+  <div class="boot-stats">
+    <div class="stat accent"><div class="n" id="stat-pct">0%</div><div class="l">Complete</div></div>
+    <div class="stat ok"><div class="n" id="stat-done">0</div><div class="l">Weeks Done</div></div>
+    <div class="stat active"><div class="n" id="stat-progress">0</div><div class="l">In Progress</div></div>
+    <div class="stat"><div class="n" id="stat-avg">—</div><div class="l">Avg Score</div></div>
+    <div class="stat"><div class="n" id="stat-remaining">104</div><div class="l">Weeks Left</div></div>
+  </div>
+  <div class="progress-outer"><div class="progress-inner" id="progress-bar"></div></div>
+</div>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-controls">
+      <input class="search-input" id="search" type="text" placeholder="Search weeks, e.g. &quot;GC&quot;, &quot;consensus&quot;...">
+      <div class="view-tabs">
+        <div class="view-tab active" id="tab-dashboard">Dashboard</div>
+        <div class="view-tab" id="tab-expand">Expand All</div>
+      </div>
+    </div>
+    <div class="tree" id="tree"></div>
+  </div>
+
+  <div class="main" id="main">
+    <!-- injected by JS -->
+  </div>
+</div>
+
+<input type="file" id="import-file" accept="application/json">
+
+<script id="roadmap-data" type="application/json">
+{"phases": [{"num": "I", "months": "1–3", "theme": "Machine, computation, memory, compilation"}, {"num": "II", "months": "4–6", "theme": "OS, runtime, concurrency, networking"}, {"num": "III", "months": "7–9", "theme": "Data structures, algorithms, language design"}, {"num": "IV", "months": "10–12", "theme": "Databases, distributed systems, messaging"}, {"num": "V", "months": "13–15", "theme": "Architecture, APIs, reliability, security"}, {"num": "VI", "months": "16–18", "theme": "Performance, observability, scalability"}, {"num": "VII", "months": "19–21", "theme": "Advanced distributed systems and internals"}, {"num": "VIII", "months": "22–24", "theme": "Capstone, research, architecture mastery"}], "months": [{"num": 1, "theme": "Representation, Bits, CPU", "phase": "I"}, {"num": 2, "theme": "Memory, OS, Processes", "phase": "I"}, {"num": 3, "theme": "Languages, Types, Runtimes", "phase": "I"}, {"num": 4, "theme": "Concurrency", "phase": "II"}, {"num": 5, "theme": "Networking", "phase": "II"}, {"num": 6, "theme": "Databases and Persistent State", "phase": "II"}, {"num": 7, "theme": "Data Structures I", "phase": "III"}, {"num": 8, "theme": "Data Structures II", "phase": "III"}, {"num": 9, "theme": "Algorithms", "phase": "III"}, {"num": 10, "theme": "Database Internals", "phase": "IV"}, {"num": 11, "theme": "Messaging", "phase": "IV"}, {"num": 12, "theme": "Distributed Systems I", "phase": "IV"}, {"num": 13, "theme": "Architecture", "phase": "V"}, {"num": 14, "theme": "Domain and API Design", "phase": "V"}, {"num": 15, "theme": "Testing", "phase": "V"}, {"num": 16, "theme": "Observability", "phase": "VI"}, {"num": 17, "theme": "Performance", "phase": "VI"}, {"num": 18, "theme": "Scalability", "phase": "VI"}, {"num": 19, "theme": "Reliability", "phase": "VII"}, {"num": 20, "theme": "Security", "phase": "VII"}, {"num": 21, "theme": "Runtime Internals", "phase": "VII"}, {"num": 22, "theme": "Advanced Distributed Systems", "phase": "VIII"}, {"num": 23, "theme": "Architecture at Scale", "phase": "VIII"}, {"num": 24, "theme": "Master Capstone", "phase": "VIII"}], "weeks": [{"num": 1, "title": "Bits, Bytes, Number Representation", "month": 1, "phase": "I", "fundamental": "Representation", "deliverable": "`binary-inspector/` + `representation.md`", "body": "**Fundamental:** Representation\n\n**Target**\n- Understand binary, hexadecimal, signed/unsigned integers, two's complement.\n- Understand why data representation is a design decision.\n\n**Experiments / exercises**\n- Build decimal ↔ binary ↔ hexadecimal converter.\n- Implement signed 8-bit arithmetic and overflow.\n- Inspect integer representations in C.\n- Build a CLI \"binary inspector.\"\n\n**Production mapping**\n- Serialization, network protocols, database numeric types, bit flags.\n\n**Acceptance criteria**\n- Explain two's complement without notes.\n- Demonstrate overflow with tests.\n- Explain why `0.1 + 0.2` is not exactly `0.3` in binary floating point.\n- ≥80% experiment score.\n\n**Deliverable:** `binary-inspector/` + `representation.md`"}, {"num": 2, "title": "Assembly and CPU Execution", "month": 1, "phase": "I", "fundamental": "Computation", "deliverable": "annotated assembly notebook.", "body": "**Fundamental:** Computation\n\n**Target**\n- Understand registers, instructions, load/store, branch, call/return, stack frames.\n\n**Experiments**\n- Write simple x86-64/ARM64 assembly programs.\n- Compile C functions to assembly.\n- Trace function calls and loops.\n- Compare optimized vs unoptimized assembly.\n\n**Production mapping**\n- Compiler optimization, debugging, performance analysis.\n\n**Acceptance**\n- Given a small assembly function, identify inputs, outputs, branches, memory accesses.\n- Explain a stack frame.\n- Explain what a CPU actually executes.\n\n**Deliverable:** annotated assembly notebook."}, {"num": 3, "title": "C Memory Model", "month": 1, "phase": "I", "fundamental": "Memory / resource management", "deliverable": "`mini-vector/` + memory report.", "body": "**Fundamental:** Memory / resource management\n\n**Target**\n- Understand pointers, arrays, structs, stack, heap, allocation.\n\n**Experiments**\n- Pointer/address inspector.\n- Struct layout with `sizeof` and offsets.\n- `malloc/free`.\n- Array vs pointer experiments.\n\n**Practical**\n- Implement a dynamic vector: `push/pop/get/set/resize/free`.\n\n**Production mapping**\n- Java object allocation, Rust ownership, cache locality.\n\n**Acceptance**\n- Explain pointer vs value vs address.\n- Detect at least three memory errors with tooling.\n- Benchmark vector growth.\n\n**Deliverable:** `mini-vector/` + memory report."}, {"num": 4, "title": "Compilation Pipeline", "month": 1, "phase": "I", "fundamental": "Compilation / abstraction", "deliverable": "compiler-pipeline diagram + evaluator.", "body": "**Fundamental:** Compilation / abstraction\n\n**Target**\n- Understand source → compiler → assembly/object → executable.\n- Compare native compilation with JVM bytecode.\n\n**Experiments**\n- Inspect C object files.\n- Inspect Java bytecode with `javap`.\n- Compare C executable and Java `.class`.\n\n**Practical**\n- Build a tiny arithmetic expression evaluator.\n\n**Production mapping**\n- GCC/Clang, javac/JVM, Babel/TypeScript/V8.\n\n**Acceptance**\n- Draw both C and Java execution pipelines.\n- Explain static compilation vs runtime compilation.\n\n**Deliverable:** compiler-pipeline diagram + evaluator.\n\n---\n\n# MONTH 2 — Memory, OS, Processes"}, {"num": 5, "title": "Virtual Memory and Locality", "month": 2, "phase": "I", "fundamental": "Memory hierarchy", "deliverable": "allocator simulator + benchmark.", "body": "**Fundamental:** Memory hierarchy\n\n**Target**\n- Understand virtual address space, pages, locality, cache.\n\n**Experiments**\n- Sequential vs random memory access.\n- Array vs linked-list traversal.\n- Large allocation experiments.\n- Observe page behavior with Linux tooling.\n\n**Practical**\n- Build a memory allocator simulator with free blocks and coalescing.\n\n**Acceptance**\n- Explain why more RAM does not automatically improve latency.\n- Measure locality effects.\n\n**Deliverable:** allocator simulator + benchmark."}, {"num": 6, "title": "Processes and System Calls", "month": 2, "phase": "I", "fundamental": "OS abstraction", "deliverable": "`mini-shell/`", "body": "**Fundamental:** OS abstraction\n\n**Target**\n- Understand process, PID, fork/exec/wait, system calls, file descriptors.\n\n**Experiments**\n- `fork()`, `exec()`, `wait()`.\n- Parent/child communication with pipes.\n\n**Practical**\n- Build a mini Unix shell supporting commands and `|`.\n\n**Production mapping**\n- Containers, process supervisors, server workers.\n\n**Acceptance**\n- Trace shell → fork → exec → syscall → process.\n- Explain process isolation.\n\n**Deliverable:** `mini-shell/`"}, {"num": 7, "title": "Files, Buffers, I/O", "month": 2, "phase": "I", "fundamental": "Resource management / I/O", "deliverable": "`log-analyzer/` + performance report.", "body": "**Fundamental:** Resource management / I/O\n\n**Target**\n- Understand file descriptors, buffering, blocking I/O.\n\n**Experiments**\n- Raw vs buffered file reads.\n- Large-file throughput.\n- Different buffer sizes.\n\n**Practical**\n- Build a streaming log analyzer.\n\n**Acceptance**\n- Process a large synthetic log without loading the entire file.\n- Report throughput, memory, CPU.\n- Identify bottleneck.\n\n**Deliverable:** `log-analyzer/` + performance report."}, {"num": 8, "title": "Java Memory and Garbage Collection", "month": 2, "phase": "I", "fundamental": "Automatic resource management", "deliverable": "JVM memory laboratory.", "body": "**Fundamental:** Automatic resource management\n\n**Target**\n- Understand object allocation, reachability, heap, GC, references.\n\n**Experiments**\n- Allocation storm.\n- Object vs primitive memory.\n- Cache-induced retention.\n- GC tuning experiments.\n\n**Production mapping**\n- Spring request allocation and latency.\n\n**Acceptance**\n- Explain why GC improves productivity and can hurt latency.\n- Identify a memory-retention bug.\n\n**Deliverable:** JVM memory laboratory.\n\n---\n\n# MONTH 3 — Languages, Types, Runtimes"}, {"num": 9, "title": "Java Type Systems and Abstraction", "month": 3, "phase": "I", "fundamental": "Types / abstraction", "deliverable": "design comparison.", "body": "**Fundamental:** Types / abstraction\n\n**Target**\n- Understand interface, inheritance, composition, generics, immutability.\n\n**Experiments**\n- Same domain model using inheritance vs composition.\n- Generic collection.\n- Immutable value object.\n\n**Practical**\n- Design extensible payment methods.\n\n**Acceptance**\n- Explain when abstraction reduces complexity and when it creates complexity.\n- Demonstrate one over-abstraction failure.\n\n**Deliverable:** design comparison."}, {"num": 10, "title": "Spring IoC / Dependency Injection", "month": 3, "phase": "I", "fundamental": "Dependency inversion / composition", "deliverable": "`mini-di-container/`", "body": "**Fundamental:** Dependency inversion / composition\n\n**Target**\n- Understand dependency graphs and inversion of control.\n\n**Experiments**\n- Build a simplified DI container.\n- Constructor vs field injection.\n- Lifecycle experiment.\n\n**Production mapping**\n- Spring `ApplicationContext`, bean lifecycle, proxies.\n\n**Acceptance**\n- Explain DI without mentioning Spring first.\n- Explain what Spring hides.\n\n**Deliverable:** `mini-di-container/`"}, {"num": 11, "title": "JavaScript Language Runtime", "month": 3, "phase": "I", "fundamental": "Dynamic languages / closures / objects", "deliverable": "JS runtime notebook.", "body": "**Fundamental:** Dynamic languages / closures / objects\n\n**Target**\n- Understand values, references, closures, prototypes, promises.\n\n**Experiments**\n- Prototype chain inspector.\n- Closure examples.\n- Simplified Promise.\n- Equality experiments.\n\n**Practical**\n- Build a small async task abstraction.\n\n**Acceptance**\n- Explain closure and prototype chain from first principles.\n- Predict Promise behavior.\n\n**Deliverable:** JS runtime notebook."}, {"num": 12, "title": "Node.js and React Runtime", "month": 3, "phase": "I", "fundamental": "Event-driven computation / state invalidation", "deliverable": "first fullstack vertical slice.", "body": "**Fundamental:** Event-driven computation / state invalidation\n\n**Target**\n- Understand Node event loop and React rendering/reconciliation at a conceptual level.\n\n**Experiments**\n- Event-loop ordering.\n- CPU-bound blocking.\n- React unnecessary renders.\n\n**Practical**\n- Build product search/filter/pagination/cart UI.\n- Build minimal Node HTTP API.\n\n**Acceptance**\n- Explain why Node handles I/O concurrency well but CPU-heavy work blocks the event loop.\n- Identify and fix unnecessary React renders.\n\n**Deliverable:** first fullstack vertical slice.\n\n---\n\n# MONTH 4 — Concurrency"}, {"num": 13, "title": "Threads and Race Conditions in C", "month": 4, "phase": "II", "fundamental": "Concurrency / synchronization", "deliverable": "concurrency lab.", "body": "**Fundamental:** Concurrency / synchronization\n\n**Target**\n- Understand thread, shared state, race, mutex.\n\n**Experiments**\n- Concurrent counter.\n- Reproduce race condition.\n- Mutex fix.\n\n**Practical**\n- Concurrent counter server.\n\n**Acceptance**\n- Reproduce race on demand.\n- Explain why `counter++` is not necessarily atomic.\n\n**Deliverable:** concurrency lab."}, {"num": 14, "title": "Java Concurrency", "month": 4, "phase": "II", "fundamental": "Thread pools / coordination", "deliverable": "Java worker-pool benchmark.", "body": "**Fundamental:** Thread pools / coordination\n\n**Target**\n- Threads, executors, futures, atomics, locks.\n\n**Experiments**\n- Fixed thread pool.\n- Producer-consumer.\n- Atomic vs lock.\n- Queue saturation.\n\n**Practical**\n- Concurrent job processor.\n\n**Acceptance**\n- Measure throughput, latency, CPU, queue depth.\n- Explain when more threads hurt.\n\n**Deliverable:** Java worker-pool benchmark."}, {"num": 15, "title": "Go Concurrency", "month": 4, "phase": "II", "fundamental": "Concurrency model", "deliverable": "Go concurrency comparison.", "body": "**Fundamental:** Concurrency model\n\n**Target**\n- Understand goroutines, channels, select, scheduler conceptually.\n\n**Experiments**\n- Goroutines.\n- Worker pool.\n- Channel pipeline.\n- Cancellation.\n\n**Practical**\n- Concurrent URL checker.\n\n**Acceptance**\n- Compare C threads, Java executors, Go goroutines.\n- Explain what abstraction each model provides.\n\n**Deliverable:** Go concurrency comparison."}, {"num": 16, "title": "Node and Spring Concurrency", "month": 4, "phase": "II", "fundamental": "Concurrency under I/O and load", "deliverable": "concurrency benchmark report.", "body": "**Fundamental:** Concurrency under I/O and load\n\n**Target**\n- Understand event-loop concurrency vs thread-pool concurrency.\n\n**Experiments**\n- CPU-bound Node endpoint.\n- Blocking Spring endpoint.\n- Pool saturation.\n\n**Practical**\n- Load-test both.\n\n**Acceptance**\n- Explain p50/p95/p99.\n- Identify bottleneck from measurements rather than intuition.\n\n**Deliverable:** concurrency benchmark report.\n\n---\n\n# MONTH 5 — Networking"}, {"num": 17, "title": "TCP and Sockets", "month": 5, "phase": "II", "fundamental": "Communication", "deliverable": "TCP lab.", "body": "**Fundamental:** Communication\n\n**Target**\n- Understand IP, port, socket, TCP connection, buffering.\n\n**Experiments**\n- C TCP server/client.\n- Multiple clients.\n- Connection lifecycle.\n\n**Practical**\n- Raw TCP chat server.\n\n**Acceptance**\n- Trace connection establishment and data flow.\n- Explain blocking behavior.\n\n**Deliverable:** TCP lab."}, {"num": 18, "title": "HTTP", "month": 5, "phase": "II", "fundamental": "Protocol abstraction", "deliverable": "`mini-http-server/`", "body": "**Fundamental:** Protocol abstraction\n\n**Target**\n- Understand HTTP request/response, headers, status, body, keep-alive.\n\n**Experiments**\n- Minimal HTTP server in Go.\n- HTTP client.\n- Persistent connection.\n\n**Practical**\n- Support GET/POST/JSON.\n\n**Acceptance**\n- Explain browser → TCP → HTTP → server.\n- Implement HTTP without a web framework once.\n\n**Deliverable:** `mini-http-server/`"}, {"num": 19, "title": "API Design", "month": 5, "phase": "II", "fundamental": "Interface / contract", "deliverable": "API specification + implementation.", "body": "**Fundamental:** Interface / contract\n\n**Target**\n- Resources, idempotency, pagination, versioning, auth/authz.\n\n**Practical**\n- Design Users/Products/Orders API in Spring.\n- Implement Node client.\n\n**Experiments**\n- Duplicate POST.\n- Idempotency key.\n- Pagination strategies.\n\n**Acceptance**\n- Design API independent of framework.\n- Explain why an API is a contract rather than merely endpoints.\n\n**Deliverable:** API specification + implementation."}, {"num": 20, "title": "Distributed Failure", "month": 5, "phase": "II", "fundamental": "Partial failure", "deliverable": "failure-injection report.", "body": "**Fundamental:** Partial failure\n\n**Target**\n- Timeouts, retries, duplicates, backpressure, circuit breakers.\n\n**Experiments**\n- Kill service.\n- Add latency.\n- Retry storm.\n- Duplicate requests.\n\n**Practical**\n- Node → Spring → PostgreSQL failure lab.\n\n**Acceptance**\n- Demonstrate how retries can amplify failure.\n- Design bounded retries and idempotency.\n\n**Deliverable:** failure-injection report.\n\n---\n\n# MONTH 6 — Databases and Persistent State"}, {"num": 21, "title": "Data Structures Behind Databases", "month": 6, "phase": "II", "fundamental": "Data organization", "deliverable": "data-structure lab.", "body": "**Fundamental:** Data organization\n\n**Target**\n- Hash tables, trees, heaps, caches.\n\n**Experiments**\n- Implement hash table.\n- Implement B-tree-like structure or simplified ordered index.\n- LRU cache.\n\n**Production mapping**\n- Java HashMap, JS Map, PostgreSQL indexes.\n\n**Acceptance**\n- Explain why indexes trade write/storage cost for read efficiency.\n\n**Deliverable:** data-structure lab."}, {"num": 22, "title": "PostgreSQL Query Planning", "month": 6, "phase": "II", "fundamental": "Algorithms + cost models", "deliverable": "query optimization report.", "body": "**Fundamental:** Algorithms + cost models\n\n**Target**\n- Sequential scan, index scan, joins, query planner.\n\n**Experiments**\n- `EXPLAIN ANALYZE`.\n- Index/no index.\n- Composite index.\n- Join alternatives.\n\n**Practical**\n- Optimize intentionally slow queries.\n\n**Acceptance**\n- Show before/after plan and measurement.\n- Never claim an index helps without evidence.\n\n**Deliverable:** query optimization report."}, {"num": 23, "title": "Transactions, MVCC, Isolation", "month": 6, "phase": "II", "fundamental": "Consistency", "deliverable": "transaction lab.", "body": "**Fundamental:** Consistency\n\n**Target**\n- ACID, isolation levels, locks, MVCC, deadlocks.\n\n**Experiments**\n- Lost update.\n- Concurrent transfer.\n- Deadlock.\n- Isolation comparison.\n\n**Practical**\n- Bank transfer simulator.\n\n**Acceptance**\n- Reproduce and fix at least two consistency failures.\n- Explain MVCC conceptually.\n\n**Deliverable:** transaction lab."}, {"num": 24, "title": "Fullstack Vertical System", "month": 6, "phase": "II", "fundamental": "End-to-end system behavior", "deliverable": "working commerce core.", "body": "**Fundamental:** End-to-end system behavior\n\n**Target**\n- Connect React, Node, Spring, PostgreSQL.\n\n**Practical**\n- Users, products, inventory, cart, orders, authentication.\n\n**Experiments**\n- Trace request end-to-end.\n- Connection pool.\n- Error propagation.\n\n**Acceptance**\n- Trace a request from browser to disk and back.\n- Identify at least five possible bottlenecks.\n\n**Deliverable:** working commerce core."}, {"num": 25, "title": "Performance and Reliability", "month": 6, "phase": "II", "fundamental": "Resource constraints", "deliverable": "performance engineering report.", "body": "**Fundamental:** Resource constraints\n\n**Experiments**\n- React render bottleneck.\n- Node event-loop blocking.\n- JVM GC pressure.\n- PostgreSQL slow query.\n- Connection-pool saturation.\n- Network latency injection.\n\n**Metrics**\n- RPS\n- p50/p95/p99\n- CPU\n- memory\n- GC\n- DB CPU\n- active connections\n- errors\n\n**Acceptance**\n- Every optimization must have baseline → hypothesis → change → measurement → conclusion.\n\n**Deliverable:** performance engineering report."}, {"num": 26, "title": "Month 6 Capstone", "month": 6, "phase": "II", "fundamental": "", "deliverable": "architecture document + performance report + demo.", "body": "**Target**\n- Demonstrate machine → OS → runtime → network → database → application understanding.\n\n**Project**\n- Production-style commerce core.\n\n**Required**\n- React\n- Node.js\n- Spring Boot\n- PostgreSQL\n- authentication\n- inventory\n- orders\n- tests\n- observability\n- load testing\n- failure injection\n\n**Acceptance**\n- ≥85/100 weekly score.\n- Explain all major architectural choices.\n- Demonstrate three failure modes and recovery.\n- Demonstrate three bottlenecks and evidence-based fixes.\n\n**Deliverable:** architecture document + performance report + demo.\n\n---\n\n\n# MONTH 7 — Data Structures I"}, {"num": 27, "title": "Complexity, Cost Models, and Benchmarking", "month": 7, "phase": "III", "fundamental": "", "deliverable": "", "body": "### Fundamental\n**Abstraction → algorithm → cost model**\n\nThe important idea is not memorizing Big-O. It is learning to predict how a workload consumes resources.\n\n### Targets\n\nBy the end of the week, you should be able to:\n\n- Explain time complexity and space complexity.\n- Distinguish worst-case, average-case, and amortized complexity.\n- Understand constant factors.\n- Explain why `O(n)` can beat `O(log n)` for small or cache-friendly workloads.\n- Build repeatable benchmarks.\n- Understand why benchmarks can lie.\n\n### Study\n\n- Big-O notation.\n- Amortized analysis.\n- CPU cache effects.\n- Allocation cost.\n- Benchmark warm-up.\n- Throughput vs latency.\n- p50/p95/p99.\n\n### Experiments\n\n1. Linear search vs binary search.\n2. Array scan vs hash lookup.\n3. Small array vs large array.\n4. Cold vs warm JVM.\n5. Java vs Go vs Rust implementation.\n6. Node.js benchmark with and without warm-up.\n\n### Practical project\n\nBuild `benchmark-lab`:\n\n```text\nbenchmark/\n  search/\n  map/\n  sort/\n  allocation/\n  serialization/\n```\n\nEach benchmark must report:\n\n```text\nworkload\niterations\nwarm-up\nmean\np50\np95\np99\nthroughput\nmemory\nCPU\n```\n\n### Production mapping\n\nApply the model to:\n\n- React list rendering.\n- Node request handling.\n- Spring collection processing.\n- PostgreSQL query execution.\n\n### Failure experiment\n\nCreate a benchmark where:\n\n- an apparently faster algorithm loses because of allocation;\n- a JIT warm-up effect changes the result;\n- an average hides p99 latency.\n\n### Acceptance criteria\n\nYou pass only if you can explain:\n\n> \"Why is algorithmic complexity necessary but insufficient for performance prediction?\"\n\n### Deliverable\n\n`benchmark-lab/` + `week-27-performance-model.md`"}, {"num": 28, "title": "Arrays, Strings, Linked Structures", "month": 7, "phase": "III", "fundamental": "", "deliverable": "", "body": "### Fundamental\n**Data layout affects computation.**\n\n### Targets\n\nUnderstand:\n\n- contiguous memory;\n- pointer chasing;\n- dynamic arrays;\n- linked structures;\n- string representation;\n- mutation vs immutability.\n\n### Implement\n\nFrom scratch:\n\n- dynamic array;\n- singly linked list;\n- doubly linked list;\n- string builder.\n\nImplement in:\n\n- C;\n- Java;\n- Rust.\n\n### Experiments\n\nCompare:\n\n```text\nArray traversal\nvs\nLinked-list traversal\n```\n\nMeasure:\n\n- CPU time;\n- memory;\n- allocations;\n- cache behavior.\n\n### Production mapping\n\nReact:\n\n- arrays of component state.\n\nNode:\n\n- Buffers and streams.\n\nJava:\n\n- `ArrayList` vs `LinkedList`.\n\nPostgreSQL:\n\n- page-oriented storage.\n\n### Practical project\n\nBuild a **large log-processing pipeline**:\n\n```text\n10M log records\n→ parse\n→ filter\n→ aggregate\n→ sort\n→ report\n```\n\nRun multiple data structures.\n\n### Acceptance criteria\n\nYou can explain why `LinkedList` is theoretically attractive for insertion but often practically inferior to arrays.\n\n### Deliverable\n\nBenchmark report with a decision matrix:\n\n| Workload | Best structure | Why |\n|---|---|---|"}, {"num": 29, "title": "Hash Tables", "month": 7, "phase": "III", "fundamental": "", "deliverable": "", "body": "### Fundamental\n**Fast lookup is achieved by trading space and computation for organization.**\n\n### Targets\n\nUnderstand:\n\n- hash functions;\n- buckets;\n- collisions;\n- load factor;\n- resizing;\n- open addressing;\n- chaining.\n\n### Implement\n\nA `HashMap` from scratch in:\n\n- C;\n- Java;\n- Rust.\n\nOperations:\n\n```text\nput\nget\nremove\ncontains\nresize\n```\n\n### Experiments\n\nTest:\n\n- good hash function;\n- deliberately bad hash function;\n- low load factor;\n- high load factor;\n- different table sizes.\n\n### Production mapping\n\nCompare:\n\n- Java `HashMap`;\n- JavaScript `Map`;\n- Python `dict`;\n- Go `map`;\n- Rust `HashMap`.\n\n### Practical project\n\nBuild an **in-memory session store**:\n\n```text\nsessionId → session\n```\n\nAdd TTL and cleanup.\n\n### Failure experiments\n\n- hash collision storm;\n- memory growth;\n- expired-session accumulation.\n\n### Acceptance\n\nExplain:\n\n> Why does a hash table provide average O(1) lookup but not guaranteed O(1)?\n\n### Deliverable\n\n`hashmap-lab/` + collision benchmark."}, {"num": 30, "title": "Stacks, Queues, Deques, and Backpressure", "month": 7, "phase": "III", "fundamental": "", "deliverable": "", "body": "### Fundamental\n**Queues transform concurrency into controlled work.**\n\n### Targets\n\nUnderstand:\n\n- FIFO;\n- LIFO;\n- bounded queues;\n- producer-consumer;\n- backpressure;\n- queue growth.\n\n### Implement\n\n- stack;\n- queue;\n- circular queue;\n- deque;\n- bounded blocking queue.\n\n### Practical projects\n\n1. Expression parser.\n2. Job queue.\n3. HTTP request queue.\n4. Background email processor.\n\n### Experiments\n\nProducer rate:\n\n```text\n100/s\n500/s\n1,000/s\n10,000/s\n```\n\nConsumer rate:\n\n```text\n100/s\n```\n\nObserve:\n\n- queue depth;\n- latency;\n- memory;\n- failure behavior.\n\n### Production mapping\n\n- Node worker queues.\n- Spring `ThreadPoolExecutor`.\n- Kafka consumer lag.\n- PostgreSQL connection pool.\n\n### Acceptance\n\nDemonstrate why:\n\n> Unlimited queues are usually not a reliability strategy.\n\n### Deliverable\n\nBounded job queue with metrics.\n\n---\n\n# MONTH 8 — Data Structures II"}, {"num": 31, "title": "Trees", "month": 8, "phase": "III", "fundamental": "", "deliverable": "", "body": "### Fundamental\n**Hierarchical relationships require recursive structure.**\n\n### Targets\n\nUnderstand:\n\n- tree terminology;\n- recursion;\n- DFS;\n- BFS;\n- binary tree;\n- BST.\n\n### Implement\n\n- binary tree;\n- BST;\n- preorder;\n- inorder;\n- postorder;\n- level-order traversal.\n\n### Practical project\n\nBuild a **filesystem indexer**:\n\n```text\ndirectory\n├── source\n├── tests\n└── docs\n```\n\nGenerate:\n\n- tree;\n- file count;\n- directory size;\n- search results.\n\n### Production mapping\n\n- DOM tree;\n- React component tree;\n- filesystem;\n- database indexes.\n\n### Acceptance\n\nExplain why tree structure appears repeatedly in software.\n\n### Deliverable\n\nFilesystem indexer + traversal visualizer."}, {"num": 32, "title": "Heaps and Priority Queues", "month": 8, "phase": "III", "fundamental": "", "deliverable": "", "body": "### Fundamental\n**When the next item matters more than insertion order, priority becomes the organizing principle.**\n\n### Targets\n\nUnderstand:\n\n- heap invariant;\n- min heap;\n- max heap;\n- heapify;\n- priority queue.\n\n### Implement\n\nBinary heap from scratch.\n\n### Practical project\n\nBuild a **production-like job scheduler**:\n\n```text\npriority\ndeadline\nretryCount\ncreatedAt\n```\n\n### Experiments\n\nCompare:\n\n- sorted array;\n- heap;\n- unsorted array.\n\nMeasure:\n\n- insertion;\n- extraction;\n- memory.\n\n### Production mapping\n\n- schedulers;\n- OS scheduling;\n- database query priorities;\n- task queues.\n\n### Acceptance\n\nGiven a workload, justify whether a heap is appropriate.\n\n### Deliverable\n\nPriority scheduler + benchmark."}, {"num": 33, "title": "Balanced Trees and B-Trees", "month": 8, "phase": "III", "fundamental": "", "deliverable": "", "body": "### Fundamental\n**Keeping a structure balanced preserves predictable cost.**\n\n### Targets\n\nUnderstand:\n\n- tree height;\n- AVL;\n- Red-Black tree;\n- B-tree;\n- B+ tree;\n- page-oriented storage.\n\n### Implement\n\nAt least a simplified AVL tree.\n\n### Reverse engineering\n\nCompare:\n\n```text\nJava TreeMap\nPostgreSQL B-tree index\nRust BTreeMap\n```\n\n### Practical experiment\n\nCreate:\n\n```text\n1M ordered keys\n```\n\nCompare:\n\n- unbalanced BST;\n- AVL;\n- hash table;\n- sorted array.\n\n### Acceptance\n\nExplain why databases do not normally use a simple binary search tree for disk indexes.\n\n### Deliverable\n\nTree comparison report."}, {"num": 34, "title": "Graphs", "month": 8, "phase": "III", "fundamental": "", "deliverable": "", "body": "### Fundamental\n**Graphs model relationships rather than hierarchy.**\n\n### Targets\n\nUnderstand:\n\n- vertices;\n- edges;\n- directed/undirected graphs;\n- weighted graphs;\n- adjacency matrix;\n- adjacency list.\n\n### Implement\n\n- BFS;\n- DFS;\n- connected components;\n- cycle detection.\n\n### Practical project\n\nBuild a **service dependency analyzer**:\n\n```text\ncheckout\n ├── inventory\n ├── payment\n └── notification\n```\n\nDetect:\n\n- dependency cycles;\n- unreachable services;\n- dependency depth.\n\n### Production mapping\n\n- microservices;\n- package dependencies;\n- build systems;\n- network topology.\n\n### Acceptance\n\nModel a real system as a graph and justify the representation.\n\n### Deliverable\n\nDependency analyzer.\n\n---\n\n# MONTH 9 — Algorithms"}, {"num": 35, "title": "Searching and Sorting", "month": 9, "phase": "III", "fundamental": "", "deliverable": "", "body": "### Fundamental\n**Algorithms are strategies for transforming a workload under resource constraints.**\n\n### Implement\n\n- linear search;\n- binary search;\n- insertion sort;\n- merge sort;\n- quicksort;\n- heap sort.\n\n### Experiments\n\nUse:\n\n- random;\n- sorted;\n- reverse-sorted;\n- nearly sorted;\n- duplicate-heavy datasets.\n\n### Practical project\n\nBuild a **large CSV sorting utility**.\n\nRequirements:\n\n- streaming input;\n- memory limit;\n- configurable sort key.\n\n### Production mapping\n\n- PostgreSQL sort;\n- Java streams;\n- JavaScript array sorting.\n\n### Acceptance\n\nExplain why benchmark results change with input distribution.\n\n### Deliverable\n\nExternal-sort-inspired CLI + benchmark report."}, {"num": 36, "title": "Greedy Algorithms", "month": 9, "phase": "III", "fundamental": "", "deliverable": "", "body": "### Fundamental\n**Local optimization can produce global optimization only when the problem has the right structure.**\n\n### Study\n\n- interval scheduling;\n- activity selection;\n- fractional knapsack;\n- scheduling;\n- caching heuristics.\n\n### Practical project\n\nBuild a **meeting-room allocator**.\n\nInput:\n\n```text\nmeeting(start, end, priority)\n```\n\nOutput:\n\n- room assignment;\n- conflicts;\n- utilization.\n\n### Experiment\n\nCompare greedy strategies.\n\n### Acceptance\n\nFor every greedy algorithm, identify the property that makes it valid.\n\n### Deliverable\n\nScheduler + correctness explanation."}, {"num": 37, "title": "Dynamic Programming", "month": 9, "phase": "III", "fundamental": "", "deliverable": "", "body": "### Fundamental\n**Dynamic programming turns repeated subproblems into stored state.**\n\n### Study\n\n- overlapping subproblems;\n- optimal substructure;\n- memoization;\n- tabulation;\n- state definition.\n\n### Practical applications\n\nChoose at least two:\n\n- pricing;\n- inventory allocation;\n- resource planning;\n- recommendation ranking.\n\n### Exercise\n\nSolve first recursively.\n\nThen:\n\n```text\nrecursive\n→ memoized\n→ iterative\n```\n\nMeasure improvement.\n\n### Acceptance\n\nYou must define:\n\n```text\nstate\ntransition\nbase case\nanswer\n```\n\nbefore coding.\n\n### Deliverable\n\nDP notebook with derivations."}, {"num": 38, "title": "Graph Algorithms", "month": 9, "phase": "III", "fundamental": "", "deliverable": "", "body": "### Study\n\n- Dijkstra;\n- topological sorting;\n- union-find;\n- minimum spanning tree concepts.\n\n### Practical project\n\nBuild a **build/dependency planner**.\n\nExample:\n\n```text\nA → B\nA → C\nB → D\nC → D\n```\n\nGenerate valid execution order.\n\n### Production mapping\n\n- Maven/Gradle dependencies;\n- npm dependency graph;\n- CI pipelines;\n- distributed workflows.\n\n### Acceptance\n\nGiven a graph, select the correct algorithm and explain why.\n\n### Deliverable\n\nDependency planner."}, {"num": 39, "title": "Algorithmic Engineering", "month": 9, "phase": "III", "fundamental": "", "deliverable": "", "body": "### Fundamental\n\n**Asymptotic complexity describes growth; engineering performance depends on the entire machine.**\n\n### Experiments\n\nTake one algorithm and optimize:\n\n1. algorithm;\n2. memory layout;\n3. allocation;\n4. I/O;\n5. concurrency.\n\n### Compare\n\n- C;\n- Java;\n- Go;\n- Rust;\n- Node.\n\n### Acceptance\n\nProduce:\n\n```text\nbaseline\nhypothesis\nchange\nmeasurement\nregression risk\nfinal conclusion\n```\n\n### Deliverable\n\nCross-language performance study.\n\n---\n\n# MONTH 10 — Database Internals"}, {"num": 40, "title": "Storage Engine", "month": 10, "phase": "IV", "fundamental": "", "deliverable": "", "body": "### Fundamental\n**Persistence converts volatile computation into durable state.**\n\n### Learn\n\n- pages;\n- records;\n- page headers;\n- free space;\n- serialization;\n- sequential storage.\n\n### Implement\n\nToy storage engine:\n\n```text\nwrite(record)\nread(id)\ndelete(id)\nscan()\n```\n\nStore data in fixed-size pages.\n\n### Practical\n\nUse it as a tiny database behind a Java repository.\n\n### Acceptance\n\nExplain:\n\n```text\nobject\n→ record\n→ page\n→ file\n→ disk\n```\n\n### Deliverable\n\nToy storage engine."}, {"num": 41, "title": "Index Internals", "month": 10, "phase": "IV", "fundamental": "", "deliverable": "", "body": "### Learn\n\n- B-tree;\n- B+tree;\n- selectivity;\n- cardinality;\n- composite indexes;\n- covering indexes.\n\n### PostgreSQL experiments\n\nRun:\n\n```sql\nEXPLAIN ANALYZE\n```\n\nfor:\n\n- no index;\n- single-column index;\n- composite index;\n- partial index.\n\n### Practical\n\nOptimize a product-search workload.\n\n### Acceptance\n\nPredict index usefulness before testing, then validate experimentally.\n\n### Deliverable\n\nPostgreSQL index playbook."}, {"num": 42, "title": "WAL, Durability, and Crash Recovery", "month": 10, "phase": "IV", "fundamental": "", "deliverable": "", "body": "### Fundamental\n\n**Durability requires recording enough information to reconstruct state after failure.**\n\n### Learn\n\n- write-ahead logging;\n- redo;\n- checkpoints;\n- crash recovery.\n\n### Implement\n\nToy WAL:\n\n```text\nBEGIN\nUPDATE\nUPDATE\nCOMMIT\n```\n\nSimulate crash.\n\n### Production mapping\n\nPostgreSQL WAL.\n\n### Acceptance\n\nExplain why the database cannot simply write arbitrary pages whenever it wants and still guarantee durability efficiently.\n\n### Deliverable\n\nToy WAL + recovery demonstration."}, {"num": 43, "title": "Query Execution", "month": 10, "phase": "IV", "fundamental": "", "deliverable": "", "body": "### Fundamental\n\n**SQL is a declarative language; the database must transform it into an execution strategy.**\n\n### Learn\n\n- parser;\n- logical plan;\n- physical plan;\n- scan;\n- filter;\n- join;\n- aggregation.\n\n### Implement\n\nToy query engine over CSV:\n\n```sql\nSELECT ...\nFROM ...\nWHERE ...\n```\n\nSupport:\n\n- filter;\n- projection;\n- simple join;\n- aggregation.\n\n### Acceptance\n\nExplain why two equivalent SQL queries may have very different execution costs.\n\n### Deliverable\n\nToy query engine + PostgreSQL comparison.\n\n---\n\n# MONTH 11 — Messaging"}, {"num": 44, "title": "Queues and Durable Work", "month": 11, "phase": "IV", "fundamental": "", "deliverable": "", "body": "### Fundamental\n\n**Asynchronous systems decouple producer speed from consumer speed.**\n\n### Build\n\nA job queue with:\n\n- producer;\n- consumer;\n- retry;\n- visibility timeout;\n- dead-letter queue.\n\n### Practical\n\nUse it for:\n\n```text\nOrder → email\nOrder → invoice\nOrder → notification\n```\n\n### Acceptance\n\nDemonstrate consumer crash without losing the job.\n\n### Deliverable\n\nJob queue service."}, {"num": 45, "title": "Pub/Sub", "month": 11, "phase": "IV", "fundamental": "", "deliverable": "", "body": "### Fundamental\n\n**Events decouple producers from multiple consumers.**\n\n### Build\n\nEvent bus:\n\n```text\nOrderCreated\n ├── Inventory\n ├── Email\n ├── Analytics\n └── Notification\n```\n\n### Compare\n\n- direct HTTP;\n- queue;\n- pub/sub.\n\n### Acceptance\n\nExplain when each communication style is appropriate.\n\n### Deliverable\n\nEvent-driven commerce slice."}, {"num": 46, "title": "Delivery Semantics", "month": 11, "phase": "IV", "fundamental": "", "deliverable": "", "body": "### Learn\n\n- at-most-once;\n- at-least-once;\n- effectively-once;\n- idempotency.\n\n### Experiment\n\nKill consumers at different points:\n\n```text\nbefore processing\nduring processing\nafter DB commit\nbefore ACK\n```\n\n### Practical\n\nBuild idempotent order consumer.\n\n### Acceptance\n\nRepeated delivery must not duplicate the business effect.\n\n### Deliverable\n\nFailure matrix + implementation."}, {"num": 47, "title": "Ordering and Partitioning", "month": 11, "phase": "IV", "fundamental": "", "deliverable": "", "body": "### Learn\n\n- partition keys;\n- ordering scope;\n- consumer groups;\n- hotspots.\n\n### Practical\n\nPartition events by:\n\n```text\nuserId\norderId\nproductId\n```\n\nCompare ordering and load distribution.\n\n### Acceptance\n\nExplain:\n\n> Global ordering, throughput, and horizontal scalability are often competing goals.\n\n### Deliverable\n\nPartitioning simulator.\n\n---\n\n# MONTH 12 — Distributed Systems I"}, {"num": 48, "title": "Time and Clocks", "month": 12, "phase": "IV", "fundamental": "", "deliverable": "", "body": "### Fundamental\n\n**Distributed computers do not share one perfect clock.**\n\n### Study\n\n- clock drift;\n- skew;\n- NTP concept;\n- logical clocks;\n- Lamport timestamps.\n\n### Experiment\n\nSimulate three nodes with different clocks.\n\n### Practical\n\nBuild an event-ordering simulator.\n\n### Acceptance\n\nExplain why timestamps alone cannot always determine causal order.\n\n### Deliverable\n\nLogical-clock lab."}, {"num": 49, "title": "Consistency", "month": 12, "phase": "IV", "fundamental": "", "deliverable": "", "body": "### Learn\n\n- strong consistency;\n- eventual consistency;\n- read-your-writes;\n- monotonic reads;\n- conflict.\n\n### Practical\n\nBuild replicated key-value store simulator.\n\nScenarios:\n\n```text\nwrite A\nread B\n```\n\nwith replication delay.\n\n### Acceptance\n\nChoose consistency requirements for:\n\n- inventory;\n- product views;\n- analytics;\n- user preferences.\n\n### Deliverable\n\nConsistency decision matrix."}, {"num": 50, "title": "Replication", "month": 12, "phase": "IV", "fundamental": "", "deliverable": "", "body": "### Learn\n\n- primary/replica;\n- synchronous replication;\n- asynchronous replication;\n- replication lag;\n- failover.\n\n### Experiment\n\nInject:\n\n```text\n100ms lag\n1s lag\n10s lag\n```\n\nObserve stale reads.\n\n### Practical\n\nSimulate primary failure.\n\n### Acceptance\n\nExplain why replication is not the same as backup.\n\n### Deliverable\n\nReplication/failover lab."}, {"num": 51, "title": "Consensus Concepts", "month": 12, "phase": "IV", "fundamental": "", "deliverable": "", "body": "### Learn\n\n- leader;\n- quorum;\n- split brain;\n- Raft concepts;\n- election.\n\n### Build\n\nSimplified leader-election simulator.\n\n### Experiment\n\nPartition network:\n\n```text\nA B | C D\n```\n\nObserve behavior.\n\n### Acceptance\n\nExplain why quorum matters and why a minority partition should not blindly become leader.\n\n### Deliverable\n\nConsensus notebook.\n\n---\n\n# MONTH 13 — Architecture"}, {"num": 52, "title": "Complexity, Coupling, Cohesion", "month": 13, "phase": "V", "fundamental": "", "deliverable": "", "body": "### Fundamental\n\n**Software complexity is largely the cost of change.**\n\n### Analyze\n\nExisting commerce code.\n\nMeasure:\n\n- dependency count;\n- module fan-out;\n- cyclic dependencies;\n- change impact.\n\n### Practical\n\nRefactor a tangled module.\n\n### Acceptance\n\nShow measurable architectural improvement.\n\n### Deliverable\n\nBefore/after dependency graph."}, {"num": 53, "title": "Modular Monolith", "month": 13, "phase": "V", "fundamental": "", "deliverable": "", "body": "### Target\n\nBuild:\n\n```text\ncatalog\ninventory\norder\npayment\nuser\n```\n\nas modules in one deployment.\n\n### Rules\n\nModules cannot directly access another module's internals.\n\n### Experiment\n\nChange inventory implementation without changing order.\n\n### Acceptance\n\nDemonstrate independent change.\n\n### Deliverable\n\nModular Spring Boot monolith."}, {"num": 54, "title": "Clean Architecture", "month": 13, "phase": "V", "fundamental": "", "deliverable": "", "body": "### Learn\n\n- dependency rule;\n- entities;\n- use cases;\n- adapters;\n- infrastructure.\n\n### Apply\n\nOnly to business-critical core.\n\n### Critical experiment\n\nCompare:\n\n```text\nsimple layered architecture\nvs\nclean architecture\n```\n\nMeasure:\n\n- code size;\n- testability;\n- complexity;\n- change cost.\n\n### Acceptance\n\nExplain when Clean Architecture is useful and when it is overengineering.\n\n### Deliverable\n\nArchitecture decision record."}, {"num": 55, "title": "Hexagonal Architecture", "month": 13, "phase": "V", "fundamental": "", "deliverable": "", "body": "### Build\n\nPorts:\n\n```text\nOrderRepository\nPaymentGateway\nNotificationGateway\n```\n\nAdapters:\n\n```text\nPostgresOrderRepository\nMockPaymentGateway\nHttpNotificationGateway\n```\n\n### Experiment\n\nRun business logic without infrastructure.\n\n### Acceptance\n\nCore business tests require no database.\n\n### Deliverable\n\nHexagonal order module.\n\n---\n\n# MONTH 14 — Domain and API Design"}, {"num": 56, "title": "Domain Modeling", "month": 14, "phase": "V", "fundamental": "", "deliverable": "", "body": "### Learn\n\n- entity;\n- value object;\n- aggregate;\n- invariant;\n- domain service.\n\n### Practical\n\nModel:\n\n```text\nOrder\nOrderItem\nMoney\nInventoryReservation\n```\n\n### Acceptance\n\nIdentify which invariants must be enforced transactionally.\n\n### Deliverable\n\nDomain model + invariant catalog."}, {"num": 57, "title": "API Evolution", "month": 14, "phase": "V", "fundamental": "", "deliverable": "", "body": "### Experiments\n\nVersion an API from:\n\n```text\nv1\n```\n\nto:\n\n```text\nv2\n```\n\nwithout breaking old clients.\n\n### Study\n\n- backward compatibility;\n- additive changes;\n- field removal;\n- enum evolution;\n- pagination evolution.\n\n### Acceptance\n\nExisting automated client tests continue passing.\n\n### Deliverable\n\nAPI evolution guide."}, {"num": 58, "title": "Error Semantics", "month": 14, "phase": "V", "fundamental": "", "deliverable": "", "body": "### Design\n\nSeparate:\n\n```text\nvalidation error\nbusiness error\nauthentication error\nauthorization error\ndependency error\nsystem error\n```\n\n### Practical\n\nStandardize error response across React/Node/Spring.\n\n### Acceptance\n\nFrontend can distinguish retryable vs non-retryable errors.\n\n### Deliverable\n\nError taxonomy."}, {"num": 59, "title": "Authentication and Authorization", "month": 14, "phase": "V", "fundamental": "", "deliverable": "", "body": "### Learn\n\n- authentication vs authorization;\n- sessions;\n- tokens;\n- RBAC;\n- least privilege.\n\n### Practical\n\nImplement:\n\n```text\nuser\nadmin\nseller\n```\n\nroles.\n\n### Attack/failure tests\n\n- expired credentials;\n- privilege escalation attempt;\n- unauthorized resource access.\n\n### Acceptance\n\nEvery protected operation has explicit authorization.\n\n### Deliverable\n\nSecurity model + tests.\n\n---\n\n# MONTH 15 — Testing"}, {"num": 60, "title": "Unit Testing", "month": 15, "phase": "V", "fundamental": "", "deliverable": "", "body": "### Fundamental\n\n**Tests are executable specifications and feedback mechanisms.**\n\n### Build\n\nDomain tests for:\n\n- pricing;\n- inventory;\n- order state transitions.\n\n### Mutation exercise\n\nIntentionally introduce bugs.\n\n### Acceptance\n\nTests catch injected defects.\n\n### Deliverable\n\nHigh-value unit-test suite."}, {"num": 61, "title": "Integration Testing", "month": 15, "phase": "V", "fundamental": "", "deliverable": "", "body": "### Test\n\n- Spring;\n- PostgreSQL;\n- HTTP;\n- transactions.\n\n### Compare\n\nMock-heavy test vs real integration test.\n\n### Acceptance\n\nKnow exactly which boundary each test validates.\n\n### Deliverable\n\nIntegration test strategy."}, {"num": 62, "title": "Contract Testing", "month": 15, "phase": "V", "fundamental": "", "deliverable": "", "body": "### Build\n\nNode consumer + Spring provider.\n\nTest:\n\n```text\nrequest schema\nresponse schema\nerror schema\n```\n\n### Break the provider intentionally.\n\n### Acceptance\n\nCI catches incompatible changes.\n\n### Deliverable\n\nConsumer/provider contract suite."}, {"num": 63, "title": "Property and Fuzz Testing", "month": 15, "phase": "V", "fundamental": "", "deliverable": "", "body": "### Targets\n\nTest:\n\n- parser;\n- serializer;\n- money calculations;\n- data structures.\n\n### Properties\n\nExamples:\n\n```text\nserialize(deserialize(x)) ≈ x\nsort(sort(x)) = sort(x)\n```\n\n### Acceptance\n\nFind at least one bug not covered by ordinary examples.\n\n### Deliverable\n\nProperty/fuzz test lab.\n\n---\n\n# MONTH 16 — Observability"}, {"num": 64, "title": "Structured Logging", "month": 16, "phase": "VI", "fundamental": "", "deliverable": "", "body": "### Implement\n\nCorrelation ID:\n\n```text\nrequestId\ntraceId\nuserId\norderId\n```\n\n### Practical\n\nTrace one order across services.\n\n### Acceptance\n\nA production incident can be reconstructed from logs.\n\n### Deliverable\n\nLogging standard."}, {"num": 65, "title": "Metrics", "month": 16, "phase": "VI", "fundamental": "", "deliverable": "", "body": "### Instrument\n\n- request count;\n- error count;\n- latency histogram;\n- queue depth;\n- DB pool;\n- JVM GC.\n\n### Experiment\n\nCompare average latency vs p95/p99.\n\n### Acceptance\n\nExplain why averages are dangerous for tail-sensitive systems.\n\n### Deliverable\n\nMetrics dashboard."}, {"num": 66, "title": "Distributed Tracing", "month": 16, "phase": "VI", "fundamental": "", "deliverable": "", "body": "### Trace\n\n```text\nReact\n→ Node\n→ Spring\n→ PostgreSQL\n```\n\n### Inject\n\n- DB latency;\n- network latency;\n- service latency.\n\n### Acceptance\n\nIdentify the dominant latency contributor from trace evidence.\n\n### Deliverable\n\nEnd-to-end trace."}, {"num": 67, "title": "SLOs and Error Budgets", "month": 16, "phase": "VI", "fundamental": "", "deliverable": "", "body": "### Define\n\nFor example:\n\n```text\navailability ≥ 99.9%\np95 checkout latency < 500ms\n```\n\n### Study\n\n- SLI;\n- SLO;\n- SLA;\n- error budget.\n\n### Practical\n\nConnect SLO violation to engineering action.\n\n### Acceptance\n\nExplain why \"100% availability\" is usually economically irrational.\n\n### Deliverable\n\nSLO document.\n\n---\n\n# MONTH 17 — Performance"}, {"num": 68, "title": "CPU Profiling", "month": 17, "phase": "VI", "fundamental": "", "deliverable": "", "body": "### Tools\n\nUse appropriate tools for each runtime:\n\n- Linux `perf`;\n- Java profiler/JFR;\n- Node profiling;\n- Go pprof;\n- Rust profiling.\n\n### Practical\n\nFind one CPU hotspot.\n\n### Acceptance\n\nOptimization is supported by profiler evidence.\n\n### Deliverable\n\nFlame graph + optimization report."}, {"num": 69, "title": "Memory Profiling", "month": 17, "phase": "VI", "fundamental": "", "deliverable": "", "body": "### Investigate\n\n- allocation rate;\n- heap;\n- retention;\n- leaks;\n- GC.\n\n### Compare\n\nJava vs Node vs Go vs Rust.\n\n### Practical\n\nCreate and diagnose a memory-retention bug.\n\n### Acceptance\n\nExplain:\n\n```text\nallocation\n→ reachability\n→ retention\n→ collection\n```\n\n### Deliverable\n\nMemory investigation report."}, {"num": 70, "title": "Database Performance", "month": 17, "phase": "VI", "fundamental": "", "deliverable": "", "body": "### Investigate\n\n- query plan;\n- indexes;\n- locks;\n- connection pool;\n- buffer/cache behavior.\n\n### Practical\n\nOptimize five intentionally slow queries.\n\n### Acceptance\n\nEach optimization has baseline and post-change evidence.\n\n### Deliverable\n\nDatabase performance playbook."}, {"num": 71, "title": "Load Testing", "month": 17, "phase": "VI", "fundamental": "", "deliverable": "", "body": "### Learn\n\n- open workload;\n- closed workload;\n- saturation;\n- concurrency;\n- throughput;\n- latency.\n\n### Practical\n\nLoad test commerce API.\n\n### Required graph\n\n```text\nconcurrency → throughput\nconcurrency → p95\nconcurrency → errors\n```\n\n### Acceptance\n\nIdentify saturation point.\n\n### Deliverable\n\nLoad-test report.\n\n---\n\n# MONTH 18 — Scalability"}, {"num": 72, "title": "Caching", "month": 18, "phase": "VI", "fundamental": "", "deliverable": "", "body": "### Learn\n\n- cache-aside;\n- write-through;\n- TTL;\n- invalidation;\n- locality.\n\n### Practical\n\nCache product catalog.\n\n### Experiments\n\nCompare:\n\n```text\n0% hit\n50% hit\n90% hit\n99% hit\n```\n\n### Acceptance\n\nQuantify cache benefit and stale-data risk.\n\n### Deliverable\n\nCaching decision record."}, {"num": 73, "title": "Connection Pools", "month": 18, "phase": "VI", "fundamental": "", "deliverable": "", "body": "### Fundamental\n\n**A pool is a concurrency control mechanism, not merely a performance optimization.**\n\n### Experiment\n\nTest pool sizes:\n\n```text\n5\n10\n20\n50\n100\n```\n\nMeasure:\n\n- throughput;\n- latency;\n- DB CPU;\n- queueing.\n\n### Acceptance\n\nExplain why a larger pool can make a system slower.\n\n### Deliverable\n\nPool-sizing report."}, {"num": 74, "title": "Horizontal Scaling", "month": 18, "phase": "VI", "fundamental": "", "deliverable": "", "body": "### Build\n\nRun:\n\n```text\nNode x 3\nSpring x 3\nPostgreSQL\nLoad balancer\n```\n\n### Investigate\n\n- statelessness;\n- sessions;\n- shared cache;\n- database bottleneck.\n\n### Acceptance\n\nDemonstrate scaling until the next bottleneck appears.\n\n### Deliverable\n\nScaling experiment."}, {"num": 75, "title": "Backpressure and Graceful Degradation", "month": 18, "phase": "VI", "fundamental": "", "deliverable": "", "body": "### Build\n\nBounded queues and admission control.\n\n### Failure\n\nIncrease load beyond capacity.\n\n### Compare\n\nWithout backpressure vs with backpressure.\n\n### Acceptance\n\nSystem fails predictably rather than exhausting memory.\n\n### Deliverable\n\nOverload-control report.\n\n---\n\n# MONTH 19 — Reliability"}, {"num": 76, "title": "Failure Models", "month": 19, "phase": "VII", "fundamental": "", "deliverable": "", "body": "### Classify\n\n- crash;\n- timeout;\n- partial failure;\n- overload;\n- corruption;\n- dependency failure.\n\n### Build\n\nFailure-injection middleware.\n\n### Acceptance\n\nEvery major dependency has a documented failure model.\n\n### Deliverable\n\nFailure matrix."}, {"num": 77, "title": "Retry and Circuit Breaking", "month": 19, "phase": "VII", "fundamental": "", "deliverable": "", "body": "### Implement\n\n- exponential backoff;\n- jitter;\n- maximum attempts;\n- circuit breaker.\n\n### Experiment\n\nCreate downstream outage.\n\n### Compare\n\nNaive retry vs bounded retry.\n\n### Acceptance\n\nShow how retry storms can amplify outages.\n\n### Deliverable\n\nRetry/circuit-breaker lab."}, {"num": 78, "title": "Idempotency", "month": 19, "phase": "VII", "fundamental": "", "deliverable": "", "body": "### Apply to\n\n- payment;\n- order creation;\n- inventory reservation.\n\n### Experiment\n\nSend same request:\n\n```text\n1x\n2x\n10x\n100x\n```\n\n### Acceptance\n\nBusiness effect remains correct.\n\n### Deliverable\n\nIdempotency design."}, {"num": 79, "title": "Disaster Recovery", "month": 19, "phase": "VII", "fundamental": "", "deliverable": "", "body": "### Implement\n\n- PostgreSQL backup;\n- restore;\n- verification;\n- recovery procedure.\n\n### Measure\n\n- RPO;\n- RTO.\n\n### Acceptance\n\nActually restore the system rather than merely documenting backup commands.\n\n### Deliverable\n\nRecovery runbook.\n\n---\n\n# MONTH 20 — Security"}, {"num": 80, "title": "Threat Modeling", "month": 20, "phase": "VII", "fundamental": "", "deliverable": "", "body": "### Learn\n\n- assets;\n- trust boundaries;\n- attack surface;\n- threats;\n- mitigations.\n\n### Practical\n\nThreat-model:\n\n```text\nReact\n→ Node\n→ Spring\n→ PostgreSQL\n```\n\n### Acceptance\n\nPrioritize threats by impact and likelihood.\n\n### Deliverable\n\nThreat model."}, {"num": 81, "title": "Web Security", "month": 20, "phase": "VII", "fundamental": "", "deliverable": "", "body": "### Study and safely reproduce locally\n\n- XSS;\n- CSRF;\n- SQL injection;\n- SSRF;\n- insecure direct object reference.\n\n### Fix\n\nEach vulnerability.\n\n### Acceptance\n\nExplain root cause rather than memorizing mitigation.\n\n### Deliverable\n\nSecurity lab."}, {"num": 82, "title": "Authentication Security", "month": 20, "phase": "VII", "fundamental": "", "deliverable": "", "body": "### Study\n\n- password hashing;\n- salts;\n- sessions;\n- tokens;\n- expiration;\n- rotation.\n\n### Practical\n\nImplement secure password lifecycle.\n\n### Acceptance\n\nExplain why passwords should be hashed rather than encrypted.\n\n### Deliverable\n\nAuthentication security review."}, {"num": 83, "title": "Supply Chain and Secrets", "month": 20, "phase": "VII", "fundamental": "", "deliverable": "", "body": "### Implement\n\n- dependency scanning;\n- secret detection;\n- environment separation;\n- SBOM concepts.\n\n### Practical\n\nRemove all hardcoded secrets.\n\n### Acceptance\n\nCI rejects accidental secret commits.\n\n### Deliverable\n\nSecure CI baseline.\n\n---\n\n# MONTH 21 — Runtime Internals"}, {"num": 84, "title": "JVM Internals", "month": 21, "phase": "VII", "fundamental": "", "deliverable": "", "body": "### Study\n\n```text\n.java\n→ javac\n→ bytecode\n→ class loading\n→ interpreter/JIT\n→ machine code\n```\n\n### Experiments\n\n- warm-up;\n- allocation;\n- GC;\n- JIT compilation;\n- escape-analysis concepts.\n\n### Practical\n\nProfile a Spring endpoint.\n\n### Acceptance\n\nExplain why JVM applications may behave differently during startup and steady state.\n\n### Deliverable\n\nJVM runtime report."}, {"num": 85, "title": "V8 and Node Runtime", "month": 21, "phase": "VII", "fundamental": "", "deliverable": "", "body": "### Study\n\n- parsing;\n- bytecode/interpreter concepts;\n- JIT;\n- hidden classes/concepts;\n- event loop;\n- libuv.\n\n### Experiments\n\nCompare:\n\n```text\nCPU-bound endpoint\nI/O-bound endpoint\n```\n\n### Acceptance\n\nExplain why Node is excellent for many I/O workloads but not automatically ideal for CPU-heavy workloads.\n\n### Deliverable\n\nNode runtime report."}, {"num": 86, "title": "Rust Ownership and Memory Safety", "month": 21, "phase": "VII", "fundamental": "", "deliverable": "", "body": "### Fundamental\n\n**Memory safety can be enforced through language semantics and compile-time reasoning.**\n\n### Study\n\n- ownership;\n- borrowing;\n- lifetimes;\n- `Option`;\n- `Result`;\n- traits.\n\n### Rewrite\n\nOne C memory-management experiment in Rust.\n\n### Break\n\nTry to reproduce:\n\n- use-after-free;\n- double-free;\n- data race.\n\nObserve compiler rejection.\n\n### Acceptance\n\nExplain the safety property, not merely the syntax.\n\n### Deliverable\n\nC vs Rust memory-safety comparison."}, {"num": 87, "title": "Go Runtime and Concurrency", "month": 21, "phase": "VII", "fundamental": "", "deliverable": "", "body": "### Study\n\n- goroutines;\n- scheduler;\n- channels;\n- GC;\n- interfaces.\n\n### Practical\n\nBuild high-concurrency HTTP service.\n\n### Compare\n\nGo vs Java vs Node.\n\nMeasure:\n\n- throughput;\n- p99;\n- memory;\n- CPU;\n- startup.\n\n### Acceptance\n\nExplain trade-offs rather than declaring one language \"faster.\"\n\n### Deliverable\n\nRuntime comparison.\n\n---\n\n# MONTH 22 — Advanced Distributed Systems"}, {"num": 88, "title": "Sharding", "month": 22, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Learn\n\n- partition key;\n- range sharding;\n- hash sharding;\n- hotspot;\n- rebalancing.\n\n### Practical\n\nBuild sharded key-value store simulator.\n\n### Experiment\n\nCompare keys:\n\n```text\nuserId\nregion\ntimestamp\nhash(userId)\n```\n\n### Acceptance\n\nIdentify hotspot scenarios.\n\n### Deliverable\n\nSharding decision matrix."}, {"num": 89, "title": "Distributed Transactions", "month": 22, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Study\n\n- two-phase commit;\n- saga;\n- compensation;\n- eventual consistency.\n\n### Practical\n\nModel:\n\n```text\nOrder\n→ Payment\n→ Inventory\n→ Shipping\n```\n\n### Failure injection\n\nFail each stage.\n\n### Acceptance\n\nRecover without creating impossible business state.\n\n### Deliverable\n\nSaga implementation/design."}, {"num": 90, "title": "Event-Driven Architecture", "month": 22, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Build\n\nConvert part of commerce flow:\n\n```text\nOrderCreated\n→ InventoryReserved\n→ PaymentAuthorized\n→ OrderConfirmed\n```\n\n### Study\n\n- event schema;\n- replay;\n- consumer versioning;\n- event ownership.\n\n### Acceptance\n\nRebuild derived state by replaying events.\n\n### Deliverable\n\nEvent-driven workflow."}, {"num": 91, "title": "Multi-Region Systems", "month": 22, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Study\n\n- latency;\n- replication;\n- regional failure;\n- routing;\n- consistency.\n\n### Practical\n\nSimulate two regions.\n\n### Failure\n\nKill Region A.\n\n### Acceptance\n\nDefine explicitly:\n\n```text\nwhat remains available?\nwhat becomes stale?\nwhat becomes unavailable?\n```\n\n### Deliverable\n\nMulti-region architecture + failure analysis.\n\n---\n\n# MONTH 23 — Architecture at Scale"}, {"num": 92, "title": "Capacity Planning", "month": 23, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Fundamental\n\n**Architecture is resource allocation under workload constraints.**\n\n### Learn\n\n- Little's Law;\n- throughput;\n- concurrency;\n- arrival rate;\n- service time.\n\n### Practical\n\nEstimate:\n\n```text\nrequests/sec\nCPU\nmemory\nDB connections\nstorage\nnetwork\n```\n\n### Acceptance\n\nProduce a capacity model with explicit assumptions.\n\n### Deliverable\n\nCapacity spreadsheet/model."}, {"num": 93, "title": "Hot Paths", "month": 23, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Identify\n\nThe most valuable end-to-end business path:\n\n```text\nBrowse\n→ Cart\n→ Checkout\n→ Order\n```\n\n### Profile\n\nFind:\n\n- CPU bottleneck;\n- DB bottleneck;\n- network bottleneck;\n- serialization;\n- lock contention.\n\n### Optimize\n\nOnly the dominant bottleneck.\n\n### Acceptance\n\nDemonstrate measurable end-to-end improvement.\n\n### Deliverable\n\nHot-path optimization report."}, {"num": 94, "title": "Cost Engineering", "month": 23, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Compare architectures\n\nExample:\n\n```text\nmonolith\nmodular monolith\nmicroservices\nserverless\n```\n\n### Calculate\n\n- compute;\n- DB;\n- network;\n- storage;\n- operational complexity.\n\n### Acceptance\n\nDefend a design using both technical and economic reasoning.\n\n### Deliverable\n\nCost/performance model."}, {"num": 95, "title": "Architecture Review", "month": 23, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Perform adversarial review\n\nAsk:\n\n- What happens if PostgreSQL is slow?\n- What if Redis disappears?\n- What if a service receives 10x traffic?\n- What if messages duplicate?\n- What if a region disappears?\n- What if schema changes?\n- What if credentials leak?\n- What if p99 becomes 10x worse?\n\n### Deliverable\n\nAt least 10 ADRs.\n\nEach ADR:\n\n```text\nContext\nDecision\nAlternatives\nTrade-offs\nConsequences\nEvidence\n```\n\n### Acceptance\n\nDefend the architecture without relying on framework names.\n\n---\n\n# MONTH 24 — Master Capstone"}, {"num": 96, "title": "Requirements and Workload Model", "month": 24, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Target\n\nStart from the problem rather than technology.\n\nDefine:\n\n- users;\n- business invariants;\n- traffic;\n- workload distribution;\n- latency requirements;\n- availability;\n- consistency;\n- security;\n- cost constraints.\n\n### Deliverable\n\nRequirements + workload specification.\n\n### Acceptance\n\nEvery architecture decision can trace back to a requirement."}, {"num": 97, "title": "Domain and Data Model", "month": 24, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Design\n\n- domain boundaries;\n- entities;\n- value objects;\n- aggregates;\n- PostgreSQL schema;\n- indexes;\n- transactions.\n\n### Acceptance\n\nExplain:\n\n```text\nWhy this aggregate?\nWhy this transaction boundary?\nWhy this index?\nWhy this consistency model?\n```\n\n### Deliverable\n\nDomain model + ERD + invariant catalog."}, {"num": 98, "title": "Core Services", "month": 24, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Implement\n\n```text\nReact\nNode.js\nSpring Boot\nPostgreSQL\n```\n\n### Features\n\n- authentication;\n- catalog;\n- cart;\n- inventory;\n- order.\n\n### Engineering requirements\n\n- unit tests;\n- integration tests;\n- API contract;\n- structured errors.\n\n### Acceptance\n\nVertical slice works end-to-end."}, {"num": 99, "title": "Concurrency and Transactions", "month": 24, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Focus\n\nInventory/order race conditions.\n\n### Tests\n\nConcurrent:\n\n```text\n100 buyers\n10 inventory units\n```\n\n### Verify\n\n- no negative inventory;\n- no duplicate order;\n- correct transaction semantics.\n\n### Acceptance\n\nSystem remains correct under concurrent load.\n\n### Deliverable\n\nConcurrency test suite + transaction analysis."}, {"num": 100, "title": "Messaging", "month": 24, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Introduce\n\nAsynchronous events:\n\n```text\nOrderCreated\nInventoryReserved\nPaymentAuthorized\nNotificationRequested\n```\n\n### Requirements\n\n- idempotent consumers;\n- retries;\n- DLQ;\n- observability.\n\n### Acceptance\n\nKill consumers during processing and recover correctly.\n\n### Deliverable\n\nEvent-driven subsystem."}, {"num": 101, "title": "Scalability", "month": 24, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Deploy\n\nAt least:\n\n```text\nReact\nNode x N\nSpring x N\nPostgreSQL\ncache\nqueue\nload generator\n```\n\n### Experiments\n\nScale:\n\n```text\n1 instance\n→ 2\n→ 4\n→ 8\n```\n\n### Measure\n\n- throughput;\n- p50;\n- p95;\n- p99;\n- CPU;\n- memory;\n- DB load;\n- queue lag.\n\n### Acceptance\n\nIdentify the first bottleneck at each scale.\n\n### Deliverable\n\nScaling report."}, {"num": 102, "title": "Reliability and Security", "month": 24, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Failure tests\n\n- DB unavailable;\n- DB slow;\n- cache unavailable;\n- queue unavailable;\n- downstream timeout;\n- service crash;\n- duplicate event;\n- invalid credentials;\n- unauthorized access.\n\n### Security\n\nComplete:\n\n- threat model;\n- dependency scan;\n- secret scan;\n- authentication review;\n- authorization review.\n\n### Acceptance\n\nEvery major failure has:\n\n```text\ndetection\ncontainment\nrecovery\nverification\n```\n\n### Deliverable\n\nReliability + security report."}, {"num": 103, "title": "Performance Engineering", "month": 24, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Method\n\nDo not optimize by intuition.\n\nUse:\n\n```text\nbaseline\n→ profile\n→ hypothesis\n→ change\n→ benchmark\n→ regression test\n```\n\n### Profile\n\n- React;\n- Node;\n- Spring/JVM;\n- PostgreSQL;\n- network.\n\n### Optimize\n\nAt least:\n\n- one CPU bottleneck;\n- one memory bottleneck;\n- one database bottleneck;\n- one network/serialization bottleneck.\n\n### Acceptance\n\nShow numerical improvement.\n\n### Deliverable\n\nFinal performance engineering report."}, {"num": 104, "title": "Final Defense", "month": 24, "phase": "VIII", "fundamental": "", "deliverable": "", "body": "### Final system\n\nProduce a complete engineering package:\n\n```text\narchitecture/\n  architecture.md\n  adr/\n  domain-model.md\n  data-model.md\n  threat-model.md\n  failure-model.md\n  capacity-model.md\n  slo.md\n\nperformance/\n  benchmarks/\n  profiles/\n  reports/\n\ntesting/\n  unit/\n  integration/\n  contract/\n  property/\n  load/\n\noperations/\n  deployment.md\n  backup-restore.md\n  incident-runbook.md\n```\n\n### Final oral defense\n\nAnswer these without looking at notes:\n\n1. What problem does the system solve?\n2. What are its invariants?\n3. Where are its boundaries?\n4. Where is state stored?\n5. How does a request travel through the system?\n6. What happens at the CPU level?\n7. What happens in memory?\n8. What does the runtime do?\n9. What happens in the OS?\n10. What happens over the network?\n11. What happens inside PostgreSQL?\n12. What happens when two requests race?\n13. What happens when a dependency fails?\n14. What happens when traffic increases 10x?\n15. What is the dominant bottleneck?\n16. What is the most expensive resource?\n17. What is the weakest reliability assumption?\n18. What security boundary matters most?\n19. Which abstraction provides the most value?\n20. Which abstraction adds unnecessary complexity?\n21. What would you remove if forced to simplify the system by 50%?\n22. What would you keep if only the fundamental behavior mattered?\n\n### Final mastery test\n\nFor each major concept, prove all five levels:\n\n```text\nLEVEL 1 — Explain\n        ↓\nLEVEL 2 — Implement\n        ↓\nLEVEL 3 — Break\n        ↓\nLEVEL 4 — Measure\n        ↓\nLEVEL 5 — Transfer\n```\n\nThe final objective is not:\n\n> \"I know React, Node, Java, Spring, PostgreSQL, Go, Rust and Python.\"\n\nIt is:\n\n> \"I can recognize the same underlying computational idea regardless of the technology implementing it.\""}]}
+</script>
+<script>
+(function(){
+  "use strict";
+  var DATA = JSON.parse(document.getElementById('roadmap-data').textContent);
+  var PHASES = DATA.phases;      // [{num,months,theme}]
+  var MONTHS = DATA.months;      // [{num,theme,phase}]
+  var WEEKS = DATA.weeks;        // [{num,title,month,phase,fundamental,deliverable,body}]
+
+  var STORE_KEY = 'ffroadmap_progress_v1';
+  var UI_KEY = 'ffroadmap_ui_v1';
+
+  function loadProgress(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){ return {}; }
+  }
+  function saveProgress(){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(progress)); }catch(e){}
+  }
+  function loadUI(){
+    try{
+      var raw = localStorage.getItem(UI_KEY);
+      return raw ? JSON.parse(raw) : {openPhases:{}, openMonths:{}};
+    }catch(e){ return {openPhases:{}, openMonths:{}}; }
+  }
+  function saveUI(){
+    try{ localStorage.setItem(UI_KEY, JSON.stringify(ui)); }catch(e){}
+  }
+
+  var progress = loadProgress(); // { weekNum: {status:'not_started'|'in_progress'|'done', score:null|number, notes:''} }
+  var ui = loadUI();
+
+  function getEntry(weekNum){
+    if(!progress[weekNum]){
+      progress[weekNum] = {status:'not_started', score:null, notes:''};
+    }
+    return progress[weekNum];
+  }
+
+  function monthsByPhase(phaseNum){
+    return MONTHS.filter(function(m){ return m.phase === phaseNum; });
+  }
+  function weeksByMonth(monthNum){
+    return WEEKS.filter(function(w){ return w.month === monthNum; });
+  }
+
+  function phaseStats(phaseNum){
+    var ws = WEEKS.filter(function(w){ return w.phase === phaseNum; });
+    var done = 0, prog = 0;
+    ws.forEach(function(w){
+      var e = progress[w.num];
+      if(e){ if(e.status==='done') done++; else if(e.status==='in_progress') prog++; }
+    });
+    return {total: ws.length, done: done, progress: prog};
+  }
+  function monthStats(monthNum){
+    var ws = weeksByMonth(monthNum);
+    var done=0, prog=0;
+    ws.forEach(function(w){
+      var e = progress[w.num];
+      if(e){ if(e.status==='done') done++; else if(e.status==='in_progress') prog++; }
+    });
+    return {total: ws.length, done: done, progress: prog};
+  }
+
+  function overallStats(){
+    var done=0, prog=0, scores=[];
+    WEEKS.forEach(function(w){
+      var e = progress[w.num];
+      if(e){
+        if(e.status==='done') done++;
+        else if(e.status==='in_progress') prog++;
+        if(e.score !== null && e.score !== undefined && e.score !== '') scores.push(Number(e.score));
+      }
+    });
+    var avg = scores.length ? Math.round(scores.reduce(function(a,b){return a+b;},0)/scores.length) : null;
+    return {total: WEEKS.length, done: done, progress: prog, avg: avg};
+  }
+
+  var currentWeek = null; // week number, null = dashboard
+
+  /* ---------------- Sidebar tree ---------------- */
+  var treeEl = document.getElementById('tree');
+
+  function buildTree(){
+    treeEl.innerHTML = '';
+    PHASES.forEach(function(ph){
+      var pStats = phaseStats(ph.num);
+      var pctP = pStats.total ? Math.round((pStats.done/pStats.total)*100) : 0;
+
+      var block = document.createElement('div');
+      block.className = 'phase-block';
+
+      var head = document.createElement('div');
+      head.className = 'phase-head' + (ui.openPhases[ph.num] ? ' open' : '');
+      head.innerHTML =
+        '<span class="chev">&#9656;</span>' +
+        '<span class="phase-roman">'+ph.num+'</span>' +
+        '<span class="phase-info"><div class="phase-name">Months '+ph.months+'</div>' +
+        '<div class="phase-theme" title="'+escapeHtml(ph.theme)+'">'+escapeHtml(ph.theme)+'</div></span>' +
+        '<span class="phase-pct">'+pctP+'%</span>';
+      block.appendChild(head);
+
+      var monthList = document.createElement('div');
+      monthList.className = 'month-list' + (ui.openPhases[ph.num] ? ' open' : '');
+
+      monthsByPhase(ph.num).forEach(function(m){
+        var mStats = monthStats(m.num);
+        var monthBlock = document.createElement('div');
+        monthBlock.className = 'month-block';
+
+        var mHead = document.createElement('div');
+        var mKey = 'm'+m.num;
+        mHead.className = 'month-head' + (ui.openMonths[mKey] ? ' open' : '');
+        var dotsHtml = weeksByMonth(m.num).map(function(w){
+          var e = progress[w.num];
+          var cls = e && e.status==='done' ? 'done' : (e && e.status==='in_progress' ? 'progress' : '');
+          return '<span class="mini-dot '+cls+'"></span>';
+        }).join('');
+        mHead.innerHTML =
+          '<span class="chev">&#9656;</span>' +
+          '<span class="month-num">M'+m.num+'</span>' +
+          '<span class="month-info"><div class="month-theme" title="'+escapeHtml(m.theme)+'">'+escapeHtml(m.theme)+'</div>' +
+          '<div class="month-dot-row">'+dotsHtml+'</div></span>';
+        monthBlock.appendChild(mHead);
+
+        var weekList = document.createElement('div');
+        weekList.className = 'week-list' + (ui.openMonths[mKey] ? ' open' : '');
+
+        weeksByMonth(m.num).forEach(function(w){
+          var e = progress[w.num];
+          var statusCls = e && e.status==='done' ? 'done' : (e && e.status==='in_progress' ? 'progress' : '');
+          var item = document.createElement('div');
+          item.className = 'week-item' + (currentWeek===w.num ? ' selected' : '');
+          item.setAttribute('data-week', w.num);
+          item.setAttribute('data-search', (w.num+' '+w.title+' '+w.fundamental).toLowerCase());
+          item.innerHTML =
+            '<span class="week-status-dot '+statusCls+'"></span>' +
+            '<span class="week-item-text"><span class="week-item-num">W'+pad2(w.num)+'</span> ' +
+            '<span class="week-item-title">'+escapeHtml(w.title)+'</span></span>';
+          item.addEventListener('click', function(){ selectWeek(w.num); });
+          weekList.appendChild(item);
+        });
+
+        mHead.addEventListener('click', function(){
+          ui.openMonths[mKey] = !ui.openMonths[mKey];
+          saveUI();
+          mHead.classList.toggle('open');
+          weekList.classList.toggle('open');
+        });
+
+        monthBlock.appendChild(weekList);
+        monthList.appendChild(monthBlock);
+      });
+
+      head.addEventListener('click', function(){
+        ui.openPhases[ph.num] = !ui.openPhases[ph.num];
+        saveUI();
+        head.classList.toggle('open');
+        monthList.classList.toggle('open');
+      });
+
+      block.appendChild(monthList);
+      treeEl.appendChild(block);
+    });
+  }
+
+  function pad2(n){ return n<10 ? '0'+n : ''+n; }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  /* ---------------- Header stats ---------------- */
+  function renderHeader(){
+    var s = overallStats();
+    var pct = s.total ? Math.round((s.done/s.total)*100) : 0;
+    document.getElementById('stat-pct').textContent = pct+'%';
+    document.getElementById('stat-done').textContent = s.done;
+    document.getElementById('stat-progress').textContent = s.progress;
+    document.getElementById('stat-avg').textContent = s.avg===null ? '—' : s.avg;
+    document.getElementById('stat-remaining').textContent = s.total - s.done;
+    document.getElementById('progress-bar').style.width = pct+'%';
+  }
+
+  /* ---------------- Dashboard ---------------- */
+  function renderDashboard(){
+    var mainEl = document.getElementById('main');
+    var html = '<div class="dash">';
+    html += '<h1>Mission Control</h1>';
+    html += '<p class="lede">A durable engineering foundation, tracked week by week. Click any cell in the memory map or any week in the sidebar to open it, log a status and score, and keep notes.</p>';
+
+    html += '<div class="memmap-title">Progress Memory Map <span class="legend"><span><i class="empty"></i>Not started</span><span><i class="prog"></i>In progress</span><span><i class="done"></i>Done</span></span></div>';
+    html += '<div class="memmap">';
+    WEEKS.forEach(function(w){
+      var e = progress[w.num];
+      var cls = e && e.status==='done' ? 'done' : (e && e.status==='in_progress' ? 'progress' : '');
+      html += '<div class="mem-cell '+cls+'" data-week="'+w.num+'" title="Week '+w.num+' — '+escapeHtml(w.title)+'">'+pad2(w.num)+'</div>';
+    });
+    html += '</div>';
+
+    html += '<div class="section-label">Phase Progress</div>';
+    html += '<div class="phase-cards">';
+    PHASES.forEach(function(ph){
+      var st = phaseStats(ph.num);
+      var pct = st.total ? Math.round((st.done/st.total)*100) : 0;
+      html += '<div class="pcard">' +
+        '<div class="pcard-top"><span class="pcard-roman">Phase '+ph.num+'</span><span class="pcard-pct">'+pct+'%</span></div>' +
+        '<div class="pcard-theme">'+escapeHtml(ph.theme)+'</div>' +
+        '<div class="pcard-bar"><div class="pcard-bar-inner" style="width:'+pct+'%"></div></div>' +
+        '<div class="pcard-months">MONTHS '+ph.months+' &middot; '+st.done+'/'+st.total+' WEEKS</div>' +
+        '</div>';
+    });
+    html += '</div>';
+
+    html += '<div class="section-label">Backup Progress</div>';
+    html += '<div class="notes-panel">';
+    html += '<p style="margin:0 0 4px;color:var(--muted);font-size:12.5px;">All progress is saved automatically in this browser (localStorage). Export a backup before clearing browser data, or to move progress to another device.</p>';
+    html += '<div class="data-buttons">' +
+      '<button class="btn primary" id="btn-export">Export progress (.json)</button>' +
+      '<button class="btn" id="btn-import">Import progress</button>' +
+      '<button class="btn danger" id="btn-reset">Reset all progress</button>' +
+      '</div>';
+    html += '</div>';
+
+    html += '<div class="footer-credit">Fundamentals-First Software Engineering Roadmap &middot; 24 months / 104 weeks &middot; Generated tracker — data embedded from source markdown.</div>';
+    html += '</div>';
+
+    mainEl.innerHTML = html;
+
+    mainEl.querySelectorAll('.mem-cell').forEach(function(cell){
+      cell.addEventListener('click', function(){
+        selectWeek(Number(cell.getAttribute('data-week')));
+      });
+    });
+    document.getElementById('btn-export').addEventListener('click', exportProgress);
+    document.getElementById('btn-import').addEventListener('click', function(){
+      document.getElementById('import-file').click();
+    });
+    document.getElementById('btn-reset').addEventListener('click', function(){
+      if(confirm('This clears all status, scores, and notes for every week. This cannot be undone. Continue?')){
+        progress = {};
+        saveProgress();
+        renderAll();
+      }
+    });
+  }
+
+  /* ---------------- Week detail ---------------- */
+  function renderWeek(weekNum){
+    var w = WEEKS.find(function(x){ return x.num === weekNum; });
+    if(!w){ renderDashboard(); return; }
+    var e = getEntry(weekNum);
+    var mainEl = document.getElementById('main');
+
+    var scoreTagHtml = '';
+    if(e.score !== null && e.score !== '' && e.score !== undefined){
+      var sc = Number(e.score);
+      var cls = sc>=90?'mastery':(sc>=85?'strong':(sc>=75?'pass':'none'));
+      var label = sc>=90?'MASTERY':(sc>=85?'STRONG':(sc>=75?'PASS':'BELOW PASS'));
+      if(cls!=='none' || sc<75){
+        scoreTagHtml = '<span class="score-tag '+(cls==='none'?'':cls)+'" style="'+(cls==='none'?'display:inline-block;background:var(--panel-2);color:var(--red);':'')+'">'+label+'</span>';
+      }
+    }
+
+    var html = '<div class="week-detail">';
+    html += '<div class="wd-eyebrow">Phase <b>'+w.phase+'</b> &middot; Month '+w.month+' &middot; Week '+pad2(w.num)+' of 104</div>';
+    html += '<h1 class="wd-title">'+escapeHtml(w.title)+'</h1>';
+    html += '<div class="wd-badges">';
+    if(w.fundamental) html += '<span class="badge fund">Fundamental: '+escapeHtml(w.fundamental)+'</span>';
+    if(w.deliverable) html += '<span class="badge deliv">Deliverable: '+escapeHtml(stripMd(w.deliverable))+'</span>';
+    html += '</div>';
+
+    html += '<div class="tracker-box"><div class="tracker-row">';
+    html += '<div class="tracker-field"><label>Status</label><div class="status-btns">' +
+      statusBtn('not_started','Not started',e.status) +
+      statusBtn('in_progress','In progress',e.status) +
+      statusBtn('done','Done',e.status) +
+      '</div></div>';
+    html += '<div class="tracker-field score-field"><label>Weekly score (0&ndash;100)</label>' +
+      '<span><input type="number" min="0" max="100" id="score-input" value="'+(e.score===null||e.score===undefined?'':e.score)+'" placeholder="&ndash;">'+scoreTagHtml+'</span></div>';
+    html += '</div></div>';
+
+    html += '<div class="notes-panel"><label style="display:block;font-family:var(--mono);font-size:10px;color:var(--muted-2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Notes / evidence log</label>';
+    html += '<textarea id="notes-input" placeholder="Question / Hypothesis / Result / What surprised me / What would break this design...">'+escapeHtml(e.notes||'')+'</textarea></div>';
+
+    html += '<div class="md-body" id="md-body"></div>';
+
+    var idx = WEEKS.findIndex(function(x){ return x.num===weekNum; });
+    var prevW = idx>0 ? WEEKS[idx-1] : null;
+    var nextW = idx<WEEKS.length-1 ? WEEKS[idx+1] : null;
+    html += '<div class="wd-nav">';
+    html += '<button class="nav-btn prev" id="nav-prev" '+(prevW?'':'disabled')+'><span class="lbl">&larr; PREVIOUS</span>'+(prevW?('W'+pad2(prevW.num)+' — '+escapeHtml(prevW.title)):'')+'</button>';
+    html += '<button class="nav-btn next" id="nav-next" '+(nextW?'':'disabled')+'><span class="lbl">NEXT &rarr;</span>'+(nextW?('W'+pad2(nextW.num)+' — '+escapeHtml(nextW.title)):'')+'</button>';
+    html += '</div>';
+
+    html += '</div>';
+    mainEl.innerHTML = html;
+
+    document.getElementById('md-body').innerHTML = marked.parse(w.body);
+
+    mainEl.querySelectorAll('.status-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        e.status = btn.getAttribute('data-s');
+        saveProgress();
+        renderAll();
+      });
+    });
+    document.getElementById('score-input').addEventListener('change', function(ev){
+      var v = ev.target.value;
+      e.score = v==='' ? null : Math.max(0, Math.min(100, Number(v)));
+      saveProgress();
+      renderWeek(weekNum);
+      renderHeaderAndTreeOnly();
+    });
+    document.getElementById('notes-input').addEventListener('input', function(ev){
+      e.notes = ev.target.value;
+      saveProgress();
+    });
+    if(prevW) document.getElementById('nav-prev').addEventListener('click', function(){ selectWeek(prevW.num); });
+    if(nextW) document.getElementById('nav-next').addEventListener('click', function(){ selectWeek(nextW.num); });
+
+    window.scrollTo({top:0, behavior:'instant' in window ? 'instant' : 'auto'});
+  }
+
+  function stripMd(s){
+    return s.replace(/`/g,'').replace(/\*\*/g,'');
+  }
+  function statusBtn(val,label,current){
+    return '<button class="status-btn'+(current===val?' active':'')+'" data-s="'+val+'">'+label+'</button>';
+  }
+
+  /* ---------------- Export / Import ---------------- */
+  function exportProgress(){
+    var blob = new Blob([JSON.stringify(progress, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'fundamentals-roadmap-progress.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  document.getElementById('import-file').addEventListener('change', function(ev){
+    var file = ev.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var parsed = JSON.parse(reader.result);
+        progress = parsed;
+        saveProgress();
+        renderAll();
+        alert('Progress imported successfully.');
+      }catch(err){
+        alert('Could not read that file — make sure it is a progress JSON exported from this tracker.');
+      }
+    };
+    reader.readAsText(file);
+    ev.target.value = '';
+  });
+
+  /* ---------------- Search ---------------- */
+  document.getElementById('search').addEventListener('input', function(ev){
+    var q = ev.target.value.trim().toLowerCase();
+    var items = document.querySelectorAll('.week-item');
+    if(!q){
+      items.forEach(function(it){ it.classList.remove('hidden'); });
+      return;
+    }
+    // auto-expand everything while searching
+    document.querySelectorAll('.phase-head').forEach(function(h){ h.classList.add('open'); });
+    document.querySelectorAll('.month-list').forEach(function(h){ h.classList.add('open'); });
+    document.querySelectorAll('.month-head').forEach(function(h){ h.classList.add('open'); });
+    document.querySelectorAll('.week-list').forEach(function(h){ h.classList.add('open'); });
+    items.forEach(function(it){
+      var hay = it.getAttribute('data-search');
+      it.classList.toggle('hidden', hay.indexOf(q) === -1);
+    });
+  });
+
+  /* ---------------- View tabs ---------------- */
+  document.getElementById('tab-dashboard').addEventListener('click', function(){
+    currentWeek = null;
+    setActiveTab('tab-dashboard');
+    renderAll();
+  });
+  document.getElementById('tab-expand').addEventListener('click', function(){
+    var anyOpen = Object.keys(ui.openPhases).some(function(k){ return ui.openPhases[k]; });
+    PHASES.forEach(function(ph){ ui.openPhases[ph.num] = !anyOpen; });
+    MONTHS.forEach(function(m){ ui.openMonths['m'+m.num] = !anyOpen; });
+    saveUI();
+    buildTree();
+  });
+  function setActiveTab(id){
+    document.querySelectorAll('.view-tab').forEach(function(t){ t.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+  }
+
+  /* ---------------- Selection & full render ---------------- */
+  function selectWeek(weekNum){
+    currentWeek = weekNum;
+    // auto-expand relevant phase/month
+    var w = WEEKS.find(function(x){ return x.num===weekNum; });
+    if(w){
+      ui.openPhases[w.phase] = true;
+      ui.openMonths['m'+w.month] = true;
+      saveUI();
+    }
+    renderAll();
+  }
+
+  function renderHeaderAndTreeOnly(){
+    renderHeader();
+    buildTree();
+  }
+
+  function renderAll(){
+    renderHeader();
+    buildTree();
+    if(currentWeek === null){
+      renderDashboard();
+    }else{
+      renderWeek(currentWeek);
+    }
+  }
+
+  renderAll();
+})();
+
+</script>
+</body>
+</html>
