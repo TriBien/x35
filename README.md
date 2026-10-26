@@ -21,7 +21,9 @@ Overflow occurs when the mathematical result of an operation cannot be represent
 For example, with an 8-bit unsigned integer:
 
 Range: 0 to 255
+
 255 + 1 = 256
+
 256 cannot be represented using 8 bits
 
 The resulting behavior depends on the representation and programming language. For example, fixed-width unsigned arithmetic commonly wraps around modulo 2^n

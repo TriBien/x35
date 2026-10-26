@@ -259,6 +259,23 @@ pre code{background:none;padding:0;color:var(--text);}
 .btn.danger:hover{border-color:var(--red);color:var(--red);}
 #import-file{display:none;}
 
+.file-sync-head{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11.5px;color:var(--text);}
+.file-sync-hint{margin:6px 0 0;color:var(--muted);font-size:12.5px;max-width:640px;}
+.file-sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted-2);flex:0 0 8px;}
+.file-sync-dot.ok{background:var(--green);}
+.file-sync-dot.warn{background:var(--amber);}
+.file-sync-dot.err{background:var(--red);}
+.file-sync-dot.busy{background:var(--blue);}
+.file-sync-badge{
+  display:inline-flex;align-items:center;gap:7px;max-width:260px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--muted);background:var(--panel-2);border:1px solid var(--line);
+  padding:6px 10px;border-radius:20px;cursor:default;
+}
+.file-sync-badge.clickable{cursor:pointer;}
+.file-sync-badge.clickable:hover{border-color:var(--amber);color:var(--text);}
+#file-sync-badge-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
 /* ---------- Week detail ---------- */
 .week-detail{}
 .wd-eyebrow{
@@ -369,6 +386,10 @@ pre code{background:none;padding:0;color:var(--text);}
       <div class="boot-title">FUNDAMENTALS-FIRST <b>//</b> 24-MONTH ENGINEERING ROADMAP TRACKER</div>
       <div class="boot-sub">Assembly → C → Java → JavaScript → Python → Go → Rust · 104 weeks · 8 phases</div>
     </div>
+    <div class="file-sync-badge" id="file-sync-badge">
+      <span class="file-sync-dot" id="file-sync-header-dot"></span>
+      <span id="file-sync-badge-text">Browser storage only</span>
+    </div>
   </div>
   <div class="boot-stats">
     <div class="stat accent"><div class="n" id="stat-pct">0%</div><div class="l">Complete</div></div>
@@ -412,15 +433,72 @@ pre code{background:none;padding:0;color:var(--text);}
 
   var STORE_KEY = 'ffroadmap_progress_v1';
   var UI_KEY = 'ffroadmap_ui_v1';
+  var FILE_DIRTY_KEY = 'ffroadmap_file_dirty_v1';
+  var FILE_DB = 'ffroadmap_files_v1';
+  var FILE_STORE = 'handles';
+  var FILE_HANDLE_KEY = 'progress-file';
+  var PROGRESS_FILENAME = 'fundamentals-roadmap-progress.json';
+
+  var fileSyncState = 'none'; // none | connected | needs-permission | saving | error | unsupported
+  var fileSyncError = '';
+  var progressFileHandle = null;
+  var lastFileSaveAt = null;
+  var fileWriteTimer = null;
+  var fileWriteInFlight = false;
+  var fileWriteQueued = false;
+  var progressRevision = 0;
+
+  function normalizeProgress(raw){
+    if(raw && typeof raw === 'object' && !Array.isArray(raw) && raw.progress && typeof raw.progress === 'object'){
+      raw = raw.progress;
+    }
+    if(!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Invalid progress data');
+    var out = {};
+    Object.keys(raw).forEach(function(key){
+      if(!/^\d+$/.test(key)) return;
+      var v = raw[key];
+      if(!v || typeof v !== 'object' || Array.isArray(v)) return;
+      var score = v.score;
+      if(score === null || score === undefined || score === ''){
+        score = null;
+      }else{
+        score = Number(score);
+        score = isFinite(score) ? Math.max(0, Math.min(100, score)) : null;
+      }
+      out[key] = {
+        status: (v.status === 'done' || v.status === 'in_progress') ? v.status : 'not_started',
+        score: score,
+        notes: typeof v.notes === 'string' ? v.notes : ''
+      };
+    });
+    return out;
+  }
+
+  function hasProgressEntries(p){
+    return Object.keys(p).some(function(k){
+      var e = p[k];
+      return e && (e.status === 'done' || e.status === 'in_progress' ||
+        (e.score !== null && e.score !== undefined) || (e.notes && e.notes.length));
+    });
+  }
+  function progressEqual(a, b){
+    return JSON.stringify(a) === JSON.stringify(b);
+  }
 
   function loadProgress(){
     try{
       var raw = localStorage.getItem(STORE_KEY);
-      return raw ? JSON.parse(raw) : {};
+      return raw ? normalizeProgress(JSON.parse(raw)) : {};
     }catch(e){ return {}; }
   }
-  function saveProgress(){
+  function saveProgressLocalOnly(){
     try{ localStorage.setItem(STORE_KEY, JSON.stringify(progress)); }catch(e){}
+  }
+  function saveProgress(){
+    progressRevision++;
+    saveProgressLocalOnly();
+    try{ localStorage.setItem(FILE_DIRTY_KEY, '1'); }catch(e){}
+    scheduleProgressFileWrite();
   }
   function loadUI(){
     try{
@@ -434,6 +512,379 @@ pre code{background:none;padding:0;color:var(--text);}
 
   var progress = loadProgress(); // { weekNum: {status:'not_started'|'in_progress'|'done', score:null|number, notes:''} }
   var ui = loadUI();
+
+  /* ---------------- Progress file (File System Access API) ---------------- */
+  function openFileDb(){
+    return new Promise(function(resolve, reject){
+      if(!window.indexedDB){ reject(new Error('IndexedDB is unavailable')); return; }
+      var req = indexedDB.open(FILE_DB, 1);
+      req.onupgradeneeded = function(){
+        var db = req.result;
+        if(!db.objectStoreNames.contains(FILE_STORE)) db.createObjectStore(FILE_STORE);
+      };
+      req.onsuccess = function(){ resolve(req.result); };
+      req.onerror = function(){ reject(req.error || new Error('Could not open IndexedDB')); };
+    });
+  }
+  function fileDbGet(key){
+    return openFileDb().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(FILE_STORE, 'readonly');
+        var req = tx.objectStore(FILE_STORE).get(key);
+        req.onsuccess = function(){ resolve(req.result); };
+        req.onerror = function(){ reject(req.error); };
+        tx.oncomplete = function(){ db.close(); };
+        tx.onerror = function(){ db.close(); };
+      });
+    });
+  }
+  function fileDbSet(key, value){
+    return openFileDb().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(FILE_STORE, 'readwrite');
+        tx.objectStore(FILE_STORE).put(value, key);
+        tx.oncomplete = function(){ db.close(); resolve(); };
+        tx.onerror = function(){ db.close(); reject(tx.error); };
+      });
+    });
+  }
+  function fileDbDelete(key){
+    return openFileDb().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(FILE_STORE, 'readwrite');
+        tx.objectStore(FILE_STORE).delete(key);
+        tx.oncomplete = function(){ db.close(); resolve(); };
+        tx.onerror = function(){ db.close(); reject(tx.error); };
+      });
+    });
+  }
+
+  function supportsFileSync(){
+    return !!(window.showOpenFilePicker && window.showSaveFilePicker);
+  }
+
+  function readProgressFromHandle(handle){
+    return handle.getFile().then(function(file){
+      return file.text().then(function(text){
+        var data = text.trim() ? normalizeProgress(JSON.parse(text)) : {};
+        return {progress: data, lastModified: file.lastModified || 0};
+      });
+    });
+  }
+
+  function formatSaveTime(date){
+    try{
+      return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    }catch(e){
+      return date.toLocaleTimeString();
+    }
+  }
+
+  function fileSyncInfo(){
+    var name = progressFileHandle ? progressFileHandle.name : '';
+    if(fileSyncState === 'unsupported'){
+      return {
+        dot: 'err',
+        short: 'File sync unavailable',
+        long: 'File sync is not available in this browser.',
+        hint: 'Use Export progress to keep a manual backup.',
+        canAllow: false
+      };
+    }
+    if(fileSyncState === 'connected'){
+      return {
+        dot: 'ok',
+        short: 'File: ' + name,
+        long: 'Auto-saving to ' + name + (lastFileSaveAt ? ' · saved ' + formatSaveTime(lastFileSaveAt) : ''),
+        hint: 'Changes are written to this file automatically. It stays until you delete it. After clearing browser data, use Open progress file to reconnect.',
+        canAllow: false
+      };
+    }
+    if(fileSyncState === 'saving'){
+      return {
+        dot: 'busy',
+        short: 'Saving file…',
+        long: 'Saving to ' + name + '…',
+        hint: 'Your changes are being written to the progress file.',
+        canAllow: false
+      };
+    }
+    if(fileSyncState === 'needs-permission'){
+      return {
+        dot: 'warn',
+        short: 'File needs permission',
+        long: name + ' is connected, but Chrome needs permission again.',
+        hint: 'Click Allow access to resume auto-saving.',
+        canAllow: true
+      };
+    }
+    if(fileSyncState === 'error'){
+      return {
+        dot: 'err',
+        short: 'File save failed',
+        long: 'Could not save to ' + (name || 'the progress file') + '.',
+        hint: 'Your changes are still in this browser. Click Allow access or reconnect the file.' +
+          (fileSyncError ? ' (' + fileSyncError + ')' : ''),
+        canAllow: !!progressFileHandle
+      };
+    }
+    return {
+      dot: '',
+      short: 'Browser storage only',
+      long: 'Progress is stored in this browser only.',
+      hint: 'Create or open a JSON progress file to keep it until you delete that file.',
+      canAllow: false
+    };
+  }
+
+  function updateFileSyncUI(){
+    var info = fileSyncInfo();
+    var badge = document.getElementById('file-sync-badge');
+    var badgeText = document.getElementById('file-sync-badge-text');
+    var headerDot = document.getElementById('file-sync-header-dot');
+    if(badge){
+      badge.setAttribute('title', info.long + ' ' + info.hint);
+      badge.classList.toggle('clickable', info.canAllow);
+    }
+    if(badgeText) badgeText.textContent = info.short;
+    if(headerDot) headerDot.className = 'file-sync-dot ' + info.dot;
+
+    var status = document.getElementById('file-sync-status');
+    var hint = document.getElementById('file-sync-hint');
+    var dot = document.getElementById('file-sync-dot');
+    if(status) status.textContent = info.long;
+    if(hint) hint.textContent = info.hint;
+    if(dot) dot.className = 'file-sync-dot ' + info.dot;
+
+    var createBtn = document.getElementById('btn-file-create');
+    var openBtn = document.getElementById('btn-file-open');
+    var allowBtn = document.getElementById('btn-file-allow');
+    var disconnectBtn = document.getElementById('btn-file-disconnect');
+    var hidePickers = fileSyncState === 'unsupported';
+    if(createBtn) createBtn.style.display = hidePickers ? 'none' : '';
+    if(openBtn) openBtn.style.display = hidePickers ? 'none' : '';
+    if(allowBtn) allowBtn.style.display = (info.canAllow && progressFileHandle) ? '' : 'none';
+    if(disconnectBtn) disconnectBtn.style.display = progressFileHandle ? '' : 'none';
+  }
+
+  function scheduleProgressFileWrite(){
+    if(!progressFileHandle || fileSyncState === 'needs-permission') return;
+    clearTimeout(fileWriteTimer);
+    fileWriteTimer = setTimeout(function(){
+      fileWriteTimer = null;
+      writeProgressToFile();
+    }, 300);
+  }
+
+  function flushPendingFileWrite(){
+    if(fileWriteTimer){
+      clearTimeout(fileWriteTimer);
+      fileWriteTimer = null;
+      writeProgressToFile();
+    }
+  }
+
+  async function writeProgressToFile(){
+    var handle = progressFileHandle;
+    if(!handle) return false;
+    if(fileWriteInFlight){
+      fileWriteQueued = true;
+      return false;
+    }
+    fileWriteInFlight = true;
+    var revision = progressRevision;
+    var text = JSON.stringify(progress, null, 2) + '\n';
+    fileSyncState = 'saving';
+    updateFileSyncUI();
+    try{
+      var perm = await handle.queryPermission({mode: 'readwrite'});
+      if(perm !== 'granted'){
+        if(progressFileHandle === handle) fileSyncState = 'needs-permission';
+        return false;
+      }
+      var writable = await handle.createWritable();
+      await writable.write(text);
+      await writable.close();
+      if(progressFileHandle === handle){
+        lastFileSaveAt = new Date();
+        fileSyncError = '';
+        fileSyncState = 'connected';
+        if(progressRevision === revision){
+          try{ localStorage.setItem(FILE_DIRTY_KEY, '0'); }catch(e){}
+        }
+      }
+      return true;
+    }catch(err){
+      if(progressFileHandle === handle){
+        fileSyncError = err && err.message ? err.message : String(err);
+        fileSyncState = 'error';
+      }
+      return false;
+    }finally{
+      fileWriteInFlight = false;
+      if(progressFileHandle === handle) updateFileSyncUI();
+      if(fileWriteQueued){
+        fileWriteQueued = false;
+        if(progressFileHandle) writeProgressToFile();
+      }
+    }
+  }
+
+  async function settleFileWrites(){
+    if(fileWriteTimer){
+      clearTimeout(fileWriteTimer);
+      fileWriteTimer = null;
+      writeProgressToFile();
+    }
+    while(fileWriteInFlight){
+      await new Promise(function(resolve){ setTimeout(resolve, 30); });
+    }
+  }
+
+  async function syncFromConnectedFile(){
+    if(!progressFileHandle) return;
+    try{
+      var result = await readProgressFromHandle(progressFileHandle);
+      var localDirty = localStorage.getItem(FILE_DIRTY_KEY) === '1';
+      var fileHasData = hasProgressEntries(result.progress);
+
+      if(fileHasData && !localDirty){
+        progress = result.progress;
+        saveProgressLocalOnly();
+        try{ localStorage.setItem(FILE_DIRTY_KEY, '0'); }catch(e){}
+        lastFileSaveAt = new Date(result.lastModified || Date.now());
+        fileSyncError = '';
+        fileSyncState = 'connected';
+        updateFileSyncUI();
+        renderAll();
+        return;
+      }
+
+      await writeProgressToFile();
+      renderAll();
+    }catch(err){
+      fileSyncError = err && err.message ? err.message : String(err);
+      fileSyncState = 'error';
+      updateFileSyncUI();
+    }
+  }
+
+  async function initFileSync(){
+    if(!supportsFileSync()){
+      fileSyncState = 'unsupported';
+      updateFileSyncUI();
+      return;
+    }
+    try{
+      var handle = await fileDbGet(FILE_HANDLE_KEY);
+      if(!handle){
+        updateFileSyncUI();
+        return;
+      }
+      progressFileHandle = handle;
+      var perm = await handle.queryPermission({mode: 'readwrite'});
+      if(perm === 'granted'){
+        await syncFromConnectedFile();
+      }else{
+        fileSyncState = 'needs-permission';
+        updateFileSyncUI();
+      }
+    }catch(err){
+      fileSyncError = err && err.message ? err.message : String(err);
+      fileSyncState = 'error';
+      updateFileSyncUI();
+    }
+  }
+
+  async function createProgressFile(){
+    if(!supportsFileSync()) return;
+    try{
+      var handle = await window.showSaveFilePicker({
+        suggestedName: PROGRESS_FILENAME,
+        types: [{description: 'JSON progress file', accept: {'application/json': ['.json']}}]
+      });
+      await settleFileWrites();
+      progressFileHandle = handle;
+      try{ await fileDbSet(FILE_HANDLE_KEY, handle); }catch(e){}
+      fileSyncState = 'connected';
+      await writeProgressToFile();
+      renderAll();
+    }catch(err){
+      if(err && err.name === 'AbortError') return;
+      alert('Could not create the progress file: ' + (err && err.message ? err.message : err));
+    }
+  }
+
+  async function openProgressFile(){
+    if(!supportsFileSync()) return;
+    try{
+      var handles = await window.showOpenFilePicker({
+        multiple: false,
+        types: [{description: 'JSON progress file', accept: {'application/json': ['.json']}}]
+      });
+      var handle = handles[0];
+      await settleFileWrites();
+      var result = await readProgressFromHandle(handle);
+      var fileHasData = hasProgressEntries(result.progress);
+
+      if(fileHasData && hasProgressEntries(progress) && !progressEqual(progress, result.progress)){
+        var load = confirm('This file already contains progress.\n\nOK: load the file into this browser.\nCancel: keep this browser\'s progress and cancel the connection.');
+        if(!load) return;
+      }
+
+      progressFileHandle = handle;
+      try{ await fileDbSet(FILE_HANDLE_KEY, handle); }catch(e){}
+
+      if(fileHasData){
+        progress = result.progress;
+        saveProgressLocalOnly();
+        try{ localStorage.setItem(FILE_DIRTY_KEY, '0'); }catch(e){}
+        lastFileSaveAt = new Date(result.lastModified || Date.now());
+        fileSyncError = '';
+        fileSyncState = 'connected';
+        updateFileSyncUI();
+        renderAll();
+      }else{
+        fileSyncState = 'connected';
+        await writeProgressToFile();
+        renderAll();
+      }
+    }catch(err){
+      if(err && err.name === 'AbortError') return;
+      alert('Could not open the progress file: ' + (err && err.message ? err.message : err));
+    }
+  }
+
+  async function allowFileAccess(){
+    if(!progressFileHandle) return;
+    try{
+      var perm = await progressFileHandle.requestPermission({mode: 'readwrite'});
+      if(perm !== 'granted'){
+        fileSyncState = 'needs-permission';
+        updateFileSyncUI();
+        return;
+      }
+    }catch(err){
+      fileSyncError = err && err.message ? err.message : String(err);
+      fileSyncState = 'error';
+      updateFileSyncUI();
+      return;
+    }
+    await syncFromConnectedFile();
+  }
+
+  async function disconnectFile(){
+    if(!progressFileHandle) return;
+    if(!confirm('Disconnect this progress file? Progress will stay in this browser, but it will no longer be saved to the file.')) return;
+    await settleFileWrites();
+    try{ await fileDbDelete(FILE_HANDLE_KEY); }catch(e){}
+    progressFileHandle = null;
+    lastFileSaveAt = null;
+    fileSyncError = '';
+    fileSyncState = 'none';
+    try{ localStorage.removeItem(FILE_DIRTY_KEY); }catch(e){}
+    updateFileSyncUI();
+  }
 
   function getEntry(weekNum){
     if(!progress[weekNum]){
@@ -621,9 +1072,17 @@ pre code{background:none;padding:0;color:var(--text);}
 
     html += '<div class="section-label">Backup Progress</div>';
     html += '<div class="notes-panel">';
-    html += '<p style="margin:0 0 4px;color:var(--muted);font-size:12.5px;">All progress is saved automatically in this browser (localStorage). Export a backup before clearing browser data, or to move progress to another device.</p>';
+    html += '<div class="file-sync-head"><span class="file-sync-dot" id="file-sync-dot"></span><span id="file-sync-status"></span></div>';
+    html += '<p class="file-sync-hint" id="file-sync-hint"></p>';
     html += '<div class="data-buttons">' +
-      '<button class="btn primary" id="btn-export">Export progress (.json)</button>' +
+      '<button class="btn primary" id="btn-file-create">Create progress file</button>' +
+      '<button class="btn" id="btn-file-open">Open progress file</button>' +
+      '<button class="btn" id="btn-file-allow" style="display:none">Allow access</button>' +
+      '<button class="btn danger" id="btn-file-disconnect" style="display:none">Disconnect file</button>' +
+      '</div>';
+    html += '<p style="margin:18px 0 0;color:var(--muted);font-size:12.5px;">Export a copy, import an existing progress JSON, or reset everything.</p>';
+    html += '<div class="data-buttons">' +
+      '<button class="btn" id="btn-export">Export progress (.json)</button>' +
       '<button class="btn" id="btn-import">Import progress</button>' +
       '<button class="btn danger" id="btn-reset">Reset all progress</button>' +
       '</div>';
@@ -639,6 +1098,10 @@ pre code{background:none;padding:0;color:var(--text);}
         selectWeek(Number(cell.getAttribute('data-week')));
       });
     });
+    document.getElementById('btn-file-create').addEventListener('click', createProgressFile);
+    document.getElementById('btn-file-open').addEventListener('click', openProgressFile);
+    document.getElementById('btn-file-allow').addEventListener('click', allowFileAccess);
+    document.getElementById('btn-file-disconnect').addEventListener('click', disconnectFile);
     document.getElementById('btn-export').addEventListener('click', exportProgress);
     document.getElementById('btn-import').addEventListener('click', function(){
       document.getElementById('import-file').click();
@@ -650,6 +1113,7 @@ pre code{background:none;padding:0;color:var(--text);}
         renderAll();
       }
     });
+    updateFileSyncUI();
   }
 
   /* ---------------- Week detail ---------------- */
@@ -754,7 +1218,7 @@ pre code{background:none;padding:0;color:var(--text);}
     var reader = new FileReader();
     reader.onload = function(){
       try{
-        var parsed = JSON.parse(reader.result);
+        var parsed = normalizeProgress(JSON.parse(reader.result));
         progress = parsed;
         saveProgress();
         renderAll();
@@ -832,7 +1296,19 @@ pre code{background:none;padding:0;color:var(--text);}
     }
   }
 
+  var fileSyncBadge = document.getElementById('file-sync-badge');
+  if(fileSyncBadge){
+    fileSyncBadge.addEventListener('click', function(){
+      if(fileSyncState === 'needs-permission' || fileSyncState === 'error') allowFileAccess();
+    });
+  }
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'hidden') flushPendingFileWrite();
+  });
+  window.addEventListener('pagehide', flushPendingFileWrite);
+
   renderAll();
+  initFileSync();
 })();
 
 </script>
