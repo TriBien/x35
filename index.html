@@ -784,8 +784,9 @@ pre code{background:none;padding:0;color:var(--text);}
       if(perm === 'granted'){
         await syncFromConnectedFile();
       }else{
-        fileSyncState = 'needs-permission';
-        updateFileSyncUI();
+        if(await grantFileAccess(handle)){
+          await syncFromConnectedFile();
+        }
       }
     }catch(err){
       fileSyncError = err && err.message ? err.message : String(err);
