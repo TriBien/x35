@@ -596,7 +596,7 @@ pre code{background:none;padding:0;color:var(--text);}
         dot: 'ok',
         short: 'File: ' + name,
         long: 'Auto-saving to ' + name + (lastFileSaveAt ? ' · saved ' + formatSaveTime(lastFileSaveAt) : ''),
-        hint: 'Changes are written to this file automatically. It stays until you delete it. After clearing browser data, use Open progress file to reconnect.',
+        hint: 'This file reconnects automatically on every page open or reload. For prompt-free access, install this app (browser menu → Install).',
         canAllow: false
       };
     }
@@ -613,8 +613,8 @@ pre code{background:none;padding:0;color:var(--text);}
       return {
         dot: 'warn',
         short: 'File needs permission',
-        long: name + ' is connected, but Chrome needs permission again.',
-        hint: 'Chrome needs permission again. Click the badge to resume auto-saving.',
+        long: name + ' is connected, but the browser needs permission again.',
+        hint: 'Click the badge, choose "Allow on every visit", then reload. Installed apps keep file access without asking again.',
         canAllow: true
       };
     }
@@ -861,7 +861,14 @@ pre code{background:none;padding:0;color:var(--text);}
   async function grantFileAccess(handle){
     if(!handle) return false;
     try{
-      var perm = await handle.requestPermission({mode: 'readwrite'});
+      var perm = handle.queryPermission ? await handle.queryPermission({mode: 'readwrite'}) : 'granted';
+      if(perm === 'prompt'){
+        try{
+          perm = handle.requestPermission ? await handle.requestPermission({mode: 'readwrite'}) : 'granted';
+        }catch(e){
+          perm = 'prompt';
+        }
+      }
       if(perm !== 'granted'){
         if(progressFileHandle === handle) fileSyncState = 'needs-permission';
         updateFileSyncUI();
@@ -1321,6 +1328,13 @@ pre code{background:none;padding:0;color:var(--text);}
   initFileSync();
 })();
 
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  });
+}
 </script>
 </body>
 </html>
